@@ -1,0 +1,12 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { ProfileFormView } from '@/components/profile/ProfileFormView';
+
+// Check if user is authenticated - handled by middleware
+---
+
+<Layout title="Profil - HealthyMeal">
+  <main class="min-h-screen bg-background">
+    <ProfileFormView client:load />
+  </main>
+</Layout>

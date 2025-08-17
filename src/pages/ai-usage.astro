@@ -1,0 +1,13 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { AIUsageStatsView } from '@/components/ai-usage/AIUsageStatsView';
+
+const title = 'Statystyki AI - HealthyMeal';
+const description = 'Przegląd wykorzystania sztucznej inteligencji, kosztów generowania przepisów i statystyk użytkowania modeli AI.';
+---
+
+<Layout title={title} description={description}>
+  <main class="min-h-screen bg-background">
+    <AIUsageStatsView initialPeriod="month" client:load />
+  </main>
+</Layout>

@@ -1,0 +1,36 @@
+---
+import "../styles/global.css";
+import Navigation from "../components/Navigation.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "HealthyMeal", description = "Aplikacja do generowania spersonalizowanych przepisów kulinarnych z wykorzystaniem sztucznej inteligencji." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <Navigation />
+    <slot />
+  </body>
+</html>
+
+<style>
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>

@@ -1,0 +1,12 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { RecipeListView } from '@/components/recipes/RecipeListView';
+
+// Check if user is authenticated - handled by middleware
+---
+
+<Layout title="Moje przepisy - HealthyMeal">
+  <main class="min-h-screen bg-background">
+    <RecipeListView client:load />
+  </main>
+</Layout>

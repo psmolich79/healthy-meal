@@ -1,0 +1,52 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import type { AuthFormType } from '@/types';
+
+// Get email from URL params if provided
+const url = new URL(Astro.request.url);
+const email = url.searchParams.get('email') || undefined;
+
+// Set page metadata
+const title = 'Logowanie - HealthyMeal';
+const description = 'Zaloguj się do swojego konta HealthyMeal, aby uzyskać dostęp do spersonalizowanych przepisów i preferencji żywieniowych.';
+---
+
+<Layout title={title} description={description}>
+  <div class="min-h-screen">
+    <AuthLayout 
+      formType="login"
+      defaultEmail={email}
+      client:load
+    />
+  </div>
+</Layout>
+
+<script is:inline>
+  // Handle form switching on client-side
+  document.addEventListener('DOMContentLoaded', () => {
+    const handleFormSwitch = (type) => {
+      switch (type) {
+        case 'register':
+          window.location.href = '/register';
+          break;
+        case 'reset-password':
+          window.location.href = '/reset-password';
+          break;
+        default:
+          break;
+      }
+    };
+    
+    // Make the function globally available
+    window.handleFormSwitch = handleFormSwitch;
+  });
+</script>
+
+<style>
+  /* Ensure full height for the auth container */
+  :global(body) {
+    margin: 0;
+    padding: 0;
+  }
+</style>
