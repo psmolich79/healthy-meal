@@ -122,18 +122,25 @@ export const createMockContext = (overrides = {}) => ({
   locals: {
     supabase: mockSupabase,
   },
+  site: "http://localhost:3000",
+  generator: "Astro",
+  props: {},
+  redirect: vi.fn(),
+  cookies: {} as any,
+  get: vi.fn(),
+  set: vi.fn(),
   ...overrides,
-});
+} as any);
 
 // Mock authenticated user
 export const mockUser = {
-  id: "test-user-id",
+  id: "550e8400-e29b-41d4-a716-446655440000",
   email: "test@example.com",
 };
 
 // Mock recipe data
 export const mockRecipe = {
-  id: "test-recipe-id",
+  id: "550e8400-e29b-41d4-a716-446655440001",
   title: "Test Recipe",
   ingredients: "Test ingredients",
   shopping_list: "Test shopping list",

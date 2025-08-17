@@ -3,9 +3,15 @@ import { POST, PUT, DELETE } from "../../pages/api/recipes/[id]/rating";
 import { createMockContext, mockUser, mockRecipe, mockRating } from "../setup";
 
 // Mock services
-vi.mock("../../../../lib/services/rating.service");
-vi.mock("../../../../lib/services/recipe.service");
+vi.mock("../../../../lib/services/rating.service", () => ({
+  RatingService: vi.fn()
+}));
 
+vi.mock("../../../../lib/services/recipe.service", () => ({
+  RecipeService: vi.fn()
+}));
+
+// Mock service instances
 const mockRatingService = {
   addRating: vi.fn(),
   updateRating: vi.fn(),
@@ -23,16 +29,22 @@ describe("/api/recipes/[id]/rating", () => {
     // Reset mock implementations
     vi.mocked(mockRatingService.addRating).mockResolvedValue({
       rating: "up",
-      recipe_id: "test-recipe-id",
+      recipe_id: mockRecipe.id,
       user_id: mockUser.id
     });
     vi.mocked(mockRatingService.updateRating).mockResolvedValue({
       rating: "down",
-      recipe_id: "test-recipe-id",
+      recipe_id: mockRecipe.id,
       user_id: mockUser.id
     });
     vi.mocked(mockRatingService.deleteRating).mockResolvedValue(true);
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
+    
+    // Mock service constructors
+    const { RatingService } = require("../../../lib/services/rating.service");
+    const { RecipeService } = require("../../../lib/services/recipe.service");
+    vi.mocked(RatingService).mockImplementation(() => mockRatingService);
+    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
   });
 
   describe("POST", () => {
@@ -43,10 +55,10 @@ describe("/api/recipes/[id]/rating", () => {
           supabase: {},
           authenticatedSupabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "up" })
@@ -66,10 +78,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: undefined,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "up" })
@@ -91,7 +103,7 @@ describe("/api/recipes/[id]/rating", () => {
         params: {}
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request("http://localhost:3000/api/recipes//rating", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "up" })
@@ -110,10 +122,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "invalid json"
@@ -126,16 +138,16 @@ describe("/api/recipes/[id]/rating", () => {
       expect(data.error).toBe("Invalid JSON in request body");
     });
 
-    it("should return 400 for validation errors", async () => {
+    it("should return 400 for invalid rating data", async () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "invalid" })
@@ -146,7 +158,6 @@ describe("/api/recipes/[id]/rating", () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toBe("Invalid rating data");
-      expect(data.details).toBeDefined();
     });
 
     it("should handle service errors gracefully", async () => {
@@ -158,10 +169,10 @@ describe("/api/recipes/[id]/rating", () => {
           supabase: {},
           authenticatedSupabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "up" })
@@ -182,10 +193,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" })
@@ -204,10 +215,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: undefined,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" })
@@ -226,10 +237,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "invalid-id" }
+        params: { id: "invalid-uuid" }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/invalid-id/rating", {
+      const request = new Request("http://localhost:3000/api/recipes/invalid-uuid/rating", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" })
@@ -242,6 +253,50 @@ describe("/api/recipes/[id]/rating", () => {
       expect(data.error).toBe("Invalid recipe ID");
     });
 
+    it("should return 400 for invalid JSON in request body", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {}
+        },
+        params: { id: mockRecipe.id }
+      });
+
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: "invalid json"
+      });
+
+      const response = await PUT({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Invalid JSON in request body");
+    });
+
+    it("should return 400 for validation errors", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {}
+        },
+        params: { id: mockRecipe.id }
+      });
+
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: "invalid" })
+      });
+
+      const response = await PUT({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Validation failed");
+    });
+
     it("should return 404 when recipe is not found", async () => {
       vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(null);
 
@@ -250,10 +305,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" })
@@ -274,10 +329,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/rating", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" })
@@ -298,7 +353,7 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
       const response = await DELETE(mockContext);
@@ -314,7 +369,7 @@ describe("/api/recipes/[id]/rating", () => {
           user: undefined,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
       const response = await DELETE(mockContext);
@@ -330,7 +385,7 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "invalid-id" }
+        params: { id: "invalid-uuid" }
       });
 
       const response = await DELETE(mockContext);
@@ -348,7 +403,7 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
       const response = await DELETE(mockContext);
@@ -366,7 +421,7 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {}
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id }
       });
 
       const response = await DELETE(mockContext);

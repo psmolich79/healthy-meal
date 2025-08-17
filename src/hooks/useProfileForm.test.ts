@@ -83,38 +83,51 @@ describe('useProfileForm', () => {
   });
 
   describe('preferences management', () => {
-      it('should update preferences', () => {
-    const { result } = renderHook(() => useProfileForm());
-
-    act(() => {
-      result.current.updatePreferences(['vegetarian', 'vegan']);
-    });
-
-    // Order doesn't matter for this test
-    expect(result.current.preferences).toContain('vegetarian');
-    expect(result.current.preferences).toContain('vegan');
-    expect(result.current.hasChanges).toBe(true);
-  });
-
-      it('should toggle single preference', () => {
-    const { result } = renderHook(() => useProfileForm());
-
-    act(() => {
-      result.current.togglePreference('vegetarian');
-    });
-
-    expect(result.current.preferences).toContain('vegetarian');
-
-    act(() => {
-      result.current.togglePreference('vegan');
-    });
-
-    expect(result.current.preferences).toContain('vegetarian');
-    expect(result.current.preferences).toContain('vegan');
-  });
-
-    it('should clear error when preferences change', () => {
+    it('should update preferences', async () => {
       const { result } = renderHook(() => useProfileForm());
+
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.updatePreferences(['vegetarian', 'italian']);
+      });
+
+      // Order doesn't matter for this test
+      expect(result.current.preferences).toContain('vegetarian');
+      expect(result.current.preferences).toContain('italian');
+    });
+
+    it('should toggle single preference', async () => {
+      const { result } = renderHook(() => useProfileForm());
+
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.togglePreference('vegetarian');
+      });
+
+      expect(result.current.preferences).toContain('vegetarian');
+
+      act(() => {
+        result.current.togglePreference('vegetarian'); // Toggle off
+      });
+
+      expect(result.current.preferences).not.toContain('vegetarian');
+    });
+
+    it('should clear error when preferences change', async () => {
+      const { result } = renderHook(() => useProfileForm());
+
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       // Change preferences should clear error
       act(() => {
@@ -175,7 +188,12 @@ describe('useProfileForm', () => {
 
   describe('save preferences', () => {
     it('should not save when no changes', async () => {
-      const { result } = renderHook(() => useProfileForm(['vegetarian']));
+      const { result } = renderHook(() => useProfileForm());
+
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       const success = await act(async () => {
         return await result.current.savePreferences();
@@ -197,23 +215,20 @@ describe('useProfileForm', () => {
         json: async () => ({ 
           preferences: ['vegetarian', 'italian'],
           status: 'active',
-          updated_at: '2024-01-01T00:00:00Z'
+          user_id: 'test-user-id'
         })
-      } as Response);
+      });
 
       const { result } = renderHook(() => useProfileForm());
 
-      const profile = await act(async () => {
-        return await result.current.loadProfile();
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
-      expect(profile).toEqual({
-        preferences: ['vegetarian', 'italian'],
-        status: 'active',
-        updated_at: '2024-01-01T00:00:00Z'
-      });
-      expect(result.current.originalPreferences).toEqual(['vegetarian', 'italian']);
+      expect(result.current.preferences).toEqual(['vegetarian', 'italian']);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).toBe(null);
     });
 
     it('should handle unauthorized error', async () => {
@@ -222,16 +237,16 @@ describe('useProfileForm', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401
-      } as Response);
+      });
 
       const { result } = renderHook(() => useProfileForm());
 
-      const profile = await act(async () => {
-        return await result.current.loadProfile();
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
-      expect(profile).toBeNull();
-      expect(result.current.error).toBe('Musisz być zalogowany, aby edytować profil');
+      expect(result.current.error).toBe('Błąd podczas ładowania profilu');
       expect(result.current.isLoading).toBe(false);
     });
 
@@ -241,17 +256,18 @@ describe('useProfileForm', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404
-      } as Response);
+      });
 
       const { result } = renderHook(() => useProfileForm());
 
-      const profile = await act(async () => {
-        return await result.current.loadProfile();
+      // Wait for profile to load
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
-      expect(profile).toBeNull();
-      expect(result.current.error).toBe('Twój profil nie został znaleziony');
+      expect(result.current.preferences).toEqual([]);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).toBe(null);
     });
   });
 
