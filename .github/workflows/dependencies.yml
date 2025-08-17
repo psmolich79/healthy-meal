@@ -1,0 +1,245 @@
+name: Dependency Management
+
+on:
+  schedule:
+    # Run every Tuesday at 8 AM UTC
+    - cron: '0 8 * * 2'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.14.0'
+
+jobs:
+  # Check for dependency updates
+  check-updates:
+    name: Check for Updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check npm outdated
+        run: |
+          echo "Checking for outdated dependencies..."
+          
+          # Check for outdated packages
+          npm outdated --json > outdated-report.json || true
+          
+          if [ -f outdated-report.json ]; then
+            OUTDATED_COUNT=$(jq 'length' outdated-report.json)
+            echo "Found $OUTDATED_COUNT outdated packages"
+            
+            if [ "$OUTDATED_COUNT" -gt 0 ]; then
+              echo "## 📦 Outdated Dependencies Found" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Package | Current | Wanted | Latest | Type |" >> $GITHUB_STEP_SUMMARY
+              echo "|---------|---------|--------|--------|------|" >> $GITHUB_STEP_SUMMARY
+              
+              jq -r 'to_entries[] | "| \(.key) | \(.value.current) | \(.value.wanted) | \(.value.latest) | \(.value.type) |"' outdated-report.json >> $GITHUB_STEP_SUMMARY
+              
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Total outdated packages:** $OUTDATED_COUNT" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ **All dependencies are up to date!**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Check for security vulnerabilities
+        run: |
+          echo "Checking for security vulnerabilities..."
+          
+          npm audit --json > security-audit.json || true
+          
+          if [ -f security-audit.json ]; then
+            VULNERABILITIES=$(jq -r '.metadata.vulnerabilities.total // 0' security-audit.json)
+            echo "Found $VULNERABILITIES vulnerabilities"
+            
+            if [ "$VULNERABILITIES" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "## 🔒 Security Vulnerabilities" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Total vulnerabilities:** $VULNERABILITIES" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Count by severity
+              CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' security-audit.json)
+              HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' security-audit.json)
+              MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' security-audit.json)
+              LOW=$(jq -r '.metadata.vulnerabilities.low // 0' security-audit.json)
+              
+              echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+              echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+              echo "| High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+              echo "| Moderate | $MODERATE |" >> $GITHUB_STEP_SUMMARY
+              echo "| Low | $LOW |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ **No security vulnerabilities found!**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-reports
+          path: |
+            outdated-report.json
+            security-audit.json
+          retention-days: 30
+
+  # Create update PR for minor and patch updates
+  create-update-pr:
+    name: Create Update PR
+    runs-on: ubuntu-latest
+    needs: check-updates
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for auto-updatable packages
+        run: |
+          echo "Checking for packages that can be auto-updated..."
+          
+          # Get outdated packages
+          npm outdated --json > outdated.json || true
+          
+          if [ -f outdated.json ]; then
+            # Filter for minor and patch updates only
+            AUTO_UPDATABLE=$(jq -r 'to_entries[] | select(.value.wanted != .value.latest) | select(.value.type == "dependencies" or .value.type == "devDependencies") | .key' outdated.json | head -5)
+            
+            if [ ! -z "$AUTO_UPDATABLE" ]; then
+              echo "Found packages that can be auto-updated:"
+              echo "$AUTO_UPDATABLE"
+              
+              # Create a list for the PR description
+              echo "## 🔄 Auto-updatable Dependencies" > update-list.md
+              echo "" >> update-list.md
+              echo "The following packages can be safely updated:" >> update-list.md
+              echo "" >> update-list.md
+              
+              echo "$AUTO_UPDATABLE" | while read package; do
+                CURRENT=$(jq -r ".$package.current" outdated.json)
+                LATEST=$(jq -r ".$package.latest" outdated.json)
+                TYPE=$(jq -r ".$package.type" outdated.json)
+                echo "- **$package**: $CURRENT → $LATEST ($TYPE)" >> update-list.md
+              done
+              
+              echo "" >> update-list.md
+              echo "This PR updates these packages to their latest versions." >> update-list.md
+            else
+              echo "No packages found that can be auto-updated."
+              exit 0
+            fi
+          fi
+
+      - name: Create Pull Request
+        if: success()
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update dependencies to latest versions"
+          title: "🔄 Update Dependencies"
+          body: |
+            Automated dependency update
+            
+            This PR updates the following packages to their latest versions:
+            
+            $(cat update-list.md)
+            
+            ## Changes Made
+            - [ ] Dependencies updated
+            - [ ] Tests passing
+            - [ ] No breaking changes
+            
+            ## Testing
+            - [ ] Unit tests pass
+            - [ ] E2E tests pass
+            - [ ] Build successful
+            
+            ---
+            *This PR was automatically created by GitHub Actions*
+          branch: chore/update-dependencies
+          base: main
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            maintenance
+          assignees: ${{ github.repository_owner }}
+
+  # Notify about major updates
+  notify-major-updates:
+    name: Notify Major Updates
+    runs-on: ubuntu-latest
+    needs: check-updates
+    if: always()
+    steps:
+      - name: Check for major updates
+        run: |
+          echo "Checking for major version updates..."
+          
+          if [ -f outdated-report.json ]; then
+            # Check for major updates (current major != latest major)
+            MAJOR_UPDATES=$(jq -r 'to_entries[] | select(.value.current | split(".")[0] != .value.latest | split(".")[0]) | .key' outdated-report.json)
+            
+            if [ ! -z "$MAJOR_UPDATES" ]; then
+              echo "## ⚠️  Major Version Updates Available" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "The following packages have major version updates available:" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              echo "$MAJOR_UPDATES" | while read package; do
+                CURRENT=$(jq -r ".$package.current" outdated-report.json)
+                LATEST=$(jq -r ".$package.latest" outdated-report.json)
+                echo "- **$package**: $CURRENT → $LATEST" >> $GITHUB_STEP_SUMMARY
+              done
+              
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️  **Review required!** Major updates may include breaking changes." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ **No major version updates found!**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  # Final summary
+  dependency-summary:
+    name: Dependency Summary
+    runs-on: ubuntu-latest
+    needs: [check-updates, create-update-pr, notify-major-updates]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## 📋 Dependency Management Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Task | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Check Updates | ${{ needs.check-updates.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Create Update PR | ${{ needs.create-update-pr.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Notify Major Updates | ${{ needs.notify-major-updates.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.check-updates.result }}" == "success" ]]; then
+            echo "✅ **Dependency check completed successfully!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Dependency check failed!** Please review the logs." >> $GITHUB_STEP_SUMMARY
+          fi

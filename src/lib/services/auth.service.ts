@@ -3,7 +3,8 @@ import type { LoginFormData, RegisterFormData, ResetPasswordFormData } from '@/t
 
 /**
  * Authentication service for handling user authentication operations.
- * Integrates with Supabase Auth API for login, registration, OAuth, and password reset.
+ * Integrates with Supabase Auth API for login, registration, and password reset.
+ * Uses only email/password authentication (no OAuth providers).
  */
 export class AuthService {
   /**
@@ -42,28 +43,6 @@ export class AuthService {
     }
 
     return authData;
-  }
-
-  /**
-   * Signs in a user with Google OAuth.
-   */
-  static async signInWithGoogle() {
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/profile`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent'
-        }
-      }
-    });
-
-    if (error) {
-      throw new Error(this.getErrorMessage(error));
-    }
-
-    return data;
   }
 
   /**
@@ -150,11 +129,57 @@ export class AuthService {
   }
 
   /**
-   * Converts Supabase error messages to user-friendly Polish messages.
+   * Updates the current user's email.
+   */
+  static async updateEmail(newEmail: string) {
+    const { data, error } = await supabaseClient.auth.updateUser({
+      email: newEmail
+    });
+
+    if (error) {
+      throw new Error(this.getErrorMessage(error));
+    }
+
+    return data;
+  }
+
+  /**
+   * Confirms a password reset with a new password.
+   */
+  static async confirmPasswordReset(newPassword: string) {
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      throw new Error(this.getErrorMessage(error));
+    }
+
+    return data;
+  }
+
+  /**
+   * Resends email confirmation.
+   */
+  static async resendEmailConfirmation(email: string) {
+    const { data, error } = await supabaseClient.auth.resend({
+      type: 'signup',
+      email: email
+    });
+
+    if (error) {
+      throw new Error(this.getErrorMessage(error));
+    }
+
+    return data;
+  }
+
+  /**
+   * Maps Supabase error messages to user-friendly Polish messages.
    */
   private static getErrorMessage(error: any): string {
-    const errorMessage = error?.message || 'Wystąpił nieoczekiwany błąd';
-    
+    const errorMessage = error.message || 'Wystąpił nieoczekiwany błąd';
+
     // Map common Supabase auth errors to Polish
     const errorMap: Record<string, string> = {
       'Invalid login credentials': 'Nieprawidłowy email lub hasło',
@@ -167,9 +192,6 @@ export class AuthService {
       'Email rate limit exceeded': 'Przekroczono limit prób. Spróbuj ponownie za chwilę.',
       'Signup disabled': 'Rejestracja jest obecnie wyłączona',
       'Signup not allowed': 'Rejestracja nie jest dozwolona',
-      'OAuth provider not supported': 'Ten sposób logowania nie jest obsługiwany',
-      'OAuth account not linked': 'Konto OAuth nie jest połączone',
-      'OAuth provider error': 'Błąd podczas logowania przez Google',
       'Network error': 'Błąd sieci. Sprawdź połączenie internetowe.',
       'Service unavailable': 'Usługa jest niedostępna. Spróbuj ponownie później.'
     };

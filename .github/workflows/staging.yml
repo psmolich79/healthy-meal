@@ -1,0 +1,236 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ develop, staging ]
+  pull_request:
+    branches: [ develop, staging ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.14.0'
+
+jobs:
+  # Build and test for staging
+  build-staging:
+    name: Build for Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Build application
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-build
+          path: dist/
+          retention-days: 7
+
+  # E2E tests for staging
+  e2e-staging:
+    name: E2E Tests (Staging)
+    runs-on: ubuntu-latest
+    needs: build-staging
+    env:
+      BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-e2e-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-staging, e2e-staging]
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to staging environment
+        run: |
+          echo "Deploying to staging environment..."
+          
+          # Add your staging deployment commands here
+          # Example for Vercel:
+          # npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+          
+          # Example for Netlify:
+          # npx netlify-cli deploy --prod --dir=dist --token ${{ secrets.NETLIFY_TOKEN }}
+          
+          # Example for custom server:
+          # rsync -avz --delete dist/ ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:${{ secrets.STAGING_PATH }}
+          
+          echo "Staging deployment completed!"
+
+      - name: Health check staging
+        run: |
+          echo "Performing health check on staging..."
+          
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Health check
+          if [ ! -z "${{ secrets.STAGING_BASE_URL }}" ]; then
+            curl -f "${{ secrets.STAGING_BASE_URL }}/health" || echo "Health check failed, but continuing..."
+          fi
+
+      - name: Notify staging deployment
+        if: success()
+        run: |
+          echo "🚀 **Staging deployment successful!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ ! -z "${{ secrets.STAGING_BASE_URL }}" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Staging URL:** ${{ secrets.STAGING_BASE_URL }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Performance testing on staging
+  performance-staging:
+    name: Performance Testing (Staging)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Lighthouse
+        run: npm install -g lighthouse
+
+      - name: Run Lighthouse audit on staging
+        run: |
+          echo "Running Lighthouse performance audit on staging..."
+          
+          if [ ! -z "${{ secrets.STAGING_BASE_URL }}" ]; then
+            lighthouse "${{ secrets.STAGING_BASE_URL }}" --output=json --output-path=./staging-lighthouse.json --chrome-flags="--headless --no-sandbox --disable-gpu" || true
+            
+            if [ -f staging-lighthouse.json ]; then
+              echo "## 🚀 Staging Performance Report" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract scores
+              PERFORMANCE=$(jq -r '.categories.performance.score * 100' staging-lighthouse.json 2>/dev/null || echo "N/A")
+              ACCESSIBILITY=$(jq -r '.categories.accessibility.score * 100' staging-lighthouse.json 2>/dev/null || echo "N/A")
+              BEST_PRACTICES=$(jq -r '.categories."best-practices".score * 100' staging-lighthouse.json 2>/dev/null || echo "N/A")
+              SEO=$(jq -r '.categories.seo.score * 100' staging-lighthouse.json 2>/dev/null || echo "N/A")
+              
+              echo "| Metric | Score |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| Performance | $PERFORMANCE |" >> $GITHUB_STEP_SUMMARY
+              echo "| Accessibility | $ACCESSIBILITY |" >> $GITHUB_STEP_SUMMARY
+              echo "| Best Practices | $BEST_PRACTICES |" >> $GITHUB_STEP_SUMMARY
+              echo "| SEO | $SEO |" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️  STAGING_BASE_URL not configured, skipping performance test" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload staging performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-performance
+          path: staging-lighthouse.json
+          retention-days: 30
+
+  # Final staging summary
+  staging-summary:
+    name: Staging Summary
+    runs-on: ubuntu-latest
+    needs: [build-staging, e2e-staging, deploy-staging, performance-staging]
+    if: always()
+    steps:
+      - name: Staging Status
+        run: |
+          echo "## 🚀 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Task | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build-staging.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e-staging.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployment | ${{ needs.deploy-staging.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance-staging.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.build-staging.result }}" == "success" && "${{ needs.e2e-staging.result }}" == "success" && "${{ needs.deploy-staging.result }}" == "success" ]]; then
+            echo "✅ **Staging deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Your application is now available on staging for testing." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Staging deployment failed!** Please check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,180 @@
+# GitHub Actions Configuration for HealthyMeal
+# This file contains configuration and documentation for CI/CD workflows
+
+# Required Secrets (set these in your repository settings)
+secrets:
+  # Supabase Configuration
+  SUPABASE_URL: "Your Supabase project URL"
+  SUPABASE_ANON_KEY: "Your Supabase anonymous key"
+  SUPABASE_SERVICE_ROLE_KEY: "Your Supabase service role key (for admin operations)"
+  
+  # OpenAI Configuration
+  OPENAI_API_KEY: "Your OpenAI API key for recipe generation"
+  
+  # Deployment URLs
+  BASE_URL: "Your production application URL"
+  STAGING_BASE_URL: "Your staging application URL"
+  
+  # Deployment Tokens
+  VERCEL_TOKEN: "Your Vercel deployment token (if using Vercel)"
+  NETLIFY_TOKEN: "Your Netlify deployment token (if using Netlify)"
+  DIGITALOCEAN_ACCESS_TOKEN: "Your DigitalOcean access token (if using DigitalOcean)"
+  
+  # Server Deployment (if using custom server)
+  STAGING_USER: "SSH username for staging server"
+  STAGING_HOST: "Staging server hostname/IP"
+  STAGING_PATH: "Path on staging server for deployment"
+  PRODUCTION_USER: "SSH username for production server"
+  PRODUCTION_HOST: "Production server hostname/IP"
+  PRODUCTION_PATH: "Path on production server for deployment"
+
+# Workflow Configuration
+workflows:
+  main:
+    description: "Main CI/CD pipeline for production deployment"
+    triggers: ["push to main/master", "manual"]
+    jobs: ["quality", "unit-tests", "e2e-tests", "build", "docker", "performance", "deploy"]
+    
+  pull-request:
+    description: "Checks for pull requests"
+    triggers: ["pull request", "push to main/master"]
+    jobs: ["lint", "unit-tests", "e2e-tests"]
+    
+  security:
+    description: "Security scanning and dependency management"
+    triggers: ["weekly schedule", "push to main/master", "pull request", "manual"]
+    jobs: ["security-scan", "dependency-check", "license-check", "code-security"]
+    
+  performance:
+    description: "Performance auditing and quality metrics"
+    triggers: ["weekly schedule", "push to main/master", "pull request", "manual"]
+    jobs: ["bundle-analysis", "lighthouse", "code-quality", "coverage-analysis"]
+    
+  dependencies:
+    description: "Automated dependency updates"
+    triggers: ["weekly schedule", "manual"]
+    jobs: ["check-updates", "create-update-pr", "notify-major-updates"]
+    
+  staging:
+    description: "Staging environment deployment"
+    triggers: ["push to develop/staging", "pull request to develop/staging", "manual"]
+    jobs: ["build-staging", "e2e-staging", "deploy-staging", "performance-staging"]
+
+# Environment Configuration
+environments:
+  production:
+    description: "Production deployment environment"
+    protection_rules:
+      - required_reviews: 2
+      - required_status_checks: ["quality", "unit-tests", "e2e-tests", "build", "docker", "performance"]
+      - restrict_pushes: true
+      - restrict_deletions: true
+      
+  staging:
+    description: "Staging environment for testing"
+    protection_rules:
+      - required_reviews: 1
+      - required_status_checks: ["build-staging", "e2e-staging"]
+      - restrict_pushes: false
+      - restrict_deletions: true
+
+# Branch Protection Rules
+branch_protection:
+  main:
+    required_status_checks: ["quality", "unit-tests", "e2e-tests", "build"]
+    required_reviews: 2
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: false
+    enforce_admins: true
+    
+  develop:
+    required_status_checks: ["build-staging", "e2e-staging"]
+    required_reviews: 1
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: false
+    enforce_admins: false
+
+# Performance Thresholds
+performance_thresholds:
+  lighthouse:
+    performance: 90
+    accessibility: 95
+    best_practices: 90
+    seo: 90
+    
+  coverage:
+    unit_tests: 80
+    e2e_tests: 70
+    
+  bundle_size:
+    max_total: "2MB"
+    max_js: "1MB"
+    max_css: "500KB"
+
+# Security Requirements
+security_requirements:
+  npm_audit:
+    max_vulnerabilities: 0
+    audit_level: "moderate"
+    
+  dependencies:
+    max_outdated: 10
+    auto_update_minor: true
+    auto_update_patch: true
+    require_review_major: true
+
+# Deployment Strategy
+deployment_strategy:
+  staging:
+    auto_deploy: true
+    require_tests: true
+    rollback_on_failure: true
+    
+  production:
+    auto_deploy: false
+    require_approval: true
+    require_tests: true
+    rollback_on_failure: true
+    blue_green_deployment: false
+
+# Monitoring and Alerts
+monitoring:
+  health_checks:
+    - endpoint: "/health"
+      interval: "5m"
+      timeout: "30s"
+      retries: 3
+      
+  performance_monitoring:
+    - lighthouse_audit: "daily"
+    - bundle_analysis: "on_push"
+    - coverage_reports: "on_push"
+    
+  notifications:
+    - slack_webhook: "Set your Slack webhook URL"
+    - email: "Set your email for notifications"
+    - github_issues: true
+
+# Maintenance Windows
+maintenance_windows:
+  - day: "Sunday"
+    time: "02:00-04:00 UTC"
+    description: "Weekly maintenance and updates"
+    
+  - day: "Tuesday"
+    time: "08:00-10:00 UTC"
+    description: "Dependency updates and security scans"
+
+# Documentation
+documentation:
+  readme: "README.md"
+  api_docs: "docs/api/"
+  deployment_guide: "docs/deployment.md"
+  troubleshooting: "docs/troubleshooting.md"
+  
+# Support
+support:
+  issues: "GitHub Issues"
+  discussions: "GitHub Discussions"
+  wiki: "GitHub Wiki"
+  contact: "Your contact information"

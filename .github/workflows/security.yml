@@ -1,0 +1,212 @@
+name: Security & Dependency Management
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.14.0'
+
+jobs:
+  # Security scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+
+      - name: Run npm audit fix (dry run)
+        run: npm audit fix --dry-run
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "Checking for known vulnerabilities..."
+          npm audit --json > audit-report.json || true
+          
+          if [ -f audit-report.json ]; then
+            VULNERABILITIES=$(jq -r '.metadata.vulnerabilities.total // 0' audit-report.json)
+            echo "Found $VULNERABILITIES vulnerabilities"
+            
+            if [ "$VULNERABILITIES" -gt 0 ]; then
+              echo "Vulnerability details:" >> $GITHUB_STEP_SUMMARY
+              jq -r '.advisories | to_entries[] | "**\(.value.title)** - \(.value.severity) severity" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit
+          path: audit-report.json
+          retention-days: 30
+
+  # Dependency updates
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for outdated packages
+        run: |
+          echo "Checking for outdated packages..."
+          npm outdated --json > outdated-report.json || true
+          
+          if [ -f outdated-report.json ]; then
+            OUTDATED_COUNT=$(jq 'length' outdated-report.json)
+            echo "Found $OUTDATED_COUNT outdated packages"
+            
+            if [ "$OUTDATED_COUNT" -gt 0 ]; then
+              echo "## 📦 Outdated Dependencies" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Package | Current | Wanted | Latest |" >> $GITHUB_STEP_SUMMARY
+              echo "|---------|---------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+              
+              jq -r 'to_entries[] | "| \(.key) | \(.value.current) | \(.value.wanted) | \(.value.latest) |"' outdated-report.json >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ All dependencies are up to date!" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: outdated-report.json
+          retention-days: 30
+
+  # License compliance
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          echo "Checking package licenses..."
+          npx license-checker --summary --onlyAllow "MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;WTFPL" > license-report.txt || true
+          
+          if [ -f license-report.txt ]; then
+            echo "## 📄 License Compliance Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat license-report.txt >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: license-report.txt
+          retention-days: 30
+
+  # Code security analysis
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint security rules
+        run: |
+          echo "Running security-focused ESLint rules..."
+          npm run lint -- --max-warnings=0
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Checking for potential hardcoded secrets..."
+          
+          # Check for API keys, passwords, etc.
+          if grep -r "api_key\|password\|secret\|token" src/ --exclude-dir=node_modules --exclude="*.test.*" --exclude="*.spec.*" | grep -v "process.env" | grep -v "import" | grep -v "//"; then
+            echo "⚠️  Potential hardcoded secrets found!" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the following files:" >> $GITHUB_STEP_SUMMARY
+            grep -r "api_key\|password\|secret\|token" src/ --exclude-dir=node_modules --exclude="*.test.*" --exclude="*.spec.*" | grep -v "process.env" | grep -v "import" | grep -v "//" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ No hardcoded secrets found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check environment variables
+        run: |
+          echo "Checking environment variable usage..."
+          
+          # Check if all environment variables are properly referenced
+          if grep -r "process.env" src/ --exclude-dir=node_modules | grep -v "process.env.NODE_ENV" | grep -v "process.env.TEST"; then
+            echo "✅ Environment variables are properly referenced" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  Check environment variable usage" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Final security summary
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [security-scan, dependency-check, license-check, code-security]
+    if: always()
+    steps:
+      - name: Security Status
+        run: |
+          echo "## 🔒 Security & Dependency Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Compliance | ${{ needs.license-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Security | ${{ needs.code-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.security-scan.result }}" == "success" && "${{ needs.dependency-check.result }}" == "success" && "${{ needs.license-check.result }}" == "success" && "${{ needs.code-security.result }}" == "success" ]]; then
+            echo "✅ **All security checks passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some security checks failed!** Please review the logs above." >> $GITHUB_STEP_SUMMARY
+          fi

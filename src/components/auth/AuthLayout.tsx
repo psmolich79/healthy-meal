@@ -4,7 +4,6 @@ import { AuthHeader } from './AuthHeader';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
-import { OAuthButtons } from './OAuthButtons';
 import { AuthFooter } from './AuthFooter';
 import { ErrorBoundary } from './ErrorBoundary';
 import { AuthService } from '@/lib/services/auth.service';
@@ -22,6 +21,7 @@ interface AuthLayoutProps {
  * Main authentication layout component.
  * Orchestrates all authentication components and handles form switching.
  * Provides a unified interface for login, registration, and password reset.
+ * Uses only Supabase authentication (no OAuth providers).
  */
 // Internal component that uses toast
 const AuthLayoutInner: React.FC<AuthLayoutProps> = ({ 
@@ -110,18 +110,6 @@ const AuthLayoutInner: React.FC<AuthLayoutProps> = ({
     }
   }, [handleFormSwitch]);
 
-  const handleGoogleLogin = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await AuthService.signInWithGoogle();
-      // OAuth flow will handle redirect automatically
-    } catch (error) {
-      console.error('Google OAuth error:', error);
-      toast.error(error instanceof Error ? error.message : 'Błąd logowania przez Google');
-      setIsLoading(false);
-    }
-  }, []);
-
   // Render appropriate form based on current type
   const renderForm = () => {
     switch (currentFormType) {
@@ -158,9 +146,6 @@ const AuthLayoutInner: React.FC<AuthLayoutProps> = ({
     }
   };
 
-  // Show OAuth buttons only for login and register forms
-  const shouldShowOAuth = currentFormType === 'login' || currentFormType === 'register';
-
   return (
     <ErrorBoundary>
       <AuthContainer>
@@ -168,15 +153,6 @@ const AuthLayoutInner: React.FC<AuthLayoutProps> = ({
         
         {/* Main Form */}
         {renderForm()}
-        
-        {/* OAuth Buttons */}
-        {shouldShowOAuth && (
-          <OAuthButtons
-            onGoogleLogin={handleGoogleLogin}
-            isLoading={isLoading}
-            className="mt-6"
-          />
-        )}
         
         {/* Footer with Navigation */}
         <AuthFooter

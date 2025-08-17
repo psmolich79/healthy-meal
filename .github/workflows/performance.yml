@@ -1,0 +1,296 @@
+name: Performance & Quality Audit
+
+on:
+  schedule:
+    # Run every Sunday at 6 AM UTC
+    - cron: '0 6 * * 0'
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.14.0'
+
+jobs:
+  # Bundle analysis
+  bundle-analysis:
+    name: Bundle Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Analyze bundle size
+        run: |
+          echo "Analyzing bundle size..."
+          
+          # Check dist folder size
+          DIST_SIZE=$(du -sh dist/ | cut -f1)
+          echo "Bundle size: $DIST_SIZE"
+          
+          # Check individual file sizes
+          echo "## 📦 Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total bundle size:** $DIST_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File breakdown:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          find dist/ -type f -name "*.js" -o -name "*.css" -o -name "*.html" | while read file; do
+            SIZE=$(du -h "$file" | cut -f1)
+            echo "- \`$file\`: $SIZE" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: dist/
+          retention-days: 7
+
+  # Lighthouse performance audit
+  lighthouse:
+    name: Lighthouse Performance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Lighthouse
+        run: npm install -g lighthouse
+
+      - name: Start preview server
+        run: |
+          npm run preview &
+          sleep 10
+
+      - name: Run Lighthouse audit
+        run: |
+          echo "Running Lighthouse performance audit..."
+          
+          lighthouse http://localhost:4321 --output=json --output-path=./lighthouse-report.json --chrome-flags="--headless --no-sandbox --disable-gpu" || true
+          
+          if [ -f lighthouse-report.json ]; then
+            echo "## 🚀 Lighthouse Performance Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract scores
+            PERFORMANCE=$(jq -r '.categories.performance.score * 100' lighthouse-report.json 2>/dev/null || echo "N/A")
+            ACCESSIBILITY=$(jq -r '.categories.accessibility.score * 100' lighthouse-report.json 2>/dev/null || echo "N/A")
+            BEST_PRACTICES=$(jq -r '.categories."best-practices".score * 100' lighthouse-report.json 2>/dev/null || echo "N/A")
+            SEO=$(jq -r '.categories.seo.score * 100' lighthouse-report.json 2>/dev/null || echo "N/A")
+            
+            echo "| Metric | Score |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Performance | $PERFORMANCE |" >> $GITHUB_STEP_SUMMARY
+            echo "| Accessibility | $ACCESSIBILITY |" >> $GITHUB_STEP_SUMMARY
+            echo "| Best Practices | $BEST_PRACTICES |" >> $GITHUB_STEP_SUMMARY
+            echo "| SEO | $SEO |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Performance recommendations
+            if [ "$PERFORMANCE" != "N/A" ] && [ "$PERFORMANCE" -lt 90 ]; then
+              echo "⚠️  **Performance score below 90!** Consider optimizing:" >> $GITHUB_STEP_SUMMARY
+              jq -r '.audits | to_entries[] | select(.value.score < 1) | "- \(.value.title): \(.value.description)"' lighthouse-report.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "- Check Lighthouse report for details" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ **Performance score is excellent!**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json
+          retention-days: 30
+
+  # Code quality metrics
+  code-quality:
+    name: Code Quality Metrics
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint with metrics
+        run: |
+          echo "Running ESLint with quality metrics..."
+          
+          # Run ESLint and capture output
+          npm run lint > eslint-report.txt 2>&1 || true
+          
+          # Count issues
+          ERRORS=$(grep -c "error" eslint-report.txt || echo "0")
+          WARNINGS=$(grep -c "warning" eslint-report.txt || echo "0")
+          
+          echo "## 🔍 Code Quality Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Issue Type | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Warnings | $WARNINGS |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$ERRORS" -eq 0 ] && [ "$WARNINGS" -eq 0 ]; then
+            echo "✅ **Perfect code quality!** No issues found." >> $GITHUB_STEP_SUMMARY
+          elif [ "$ERRORS" -eq 0 ]; then
+            echo "⚠️  **Good code quality!** Only warnings found." >> $GITHUB_SUMMARY
+          else
+            echo "❌ **Code quality issues found!** Please fix errors." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check TypeScript strictness
+        run: |
+          echo "Checking TypeScript configuration..."
+          
+          # Check tsconfig.json for strict settings
+          if [ -f tsconfig.json ]; then
+            echo "## 📝 TypeScript Configuration" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            STRICT=$(jq -r '.compilerOptions.strict // false' tsconfig.json)
+            NO_IMPLICIT_ANY=$(jq -r '.compilerOptions.noImplicitAny // false' tsconfig.json)
+            STRICT_NULL_CHECKS=$(jq -r '.compilerOptions.strictNullChecks // false' tsconfig.json)
+            
+            echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Strict Mode | $STRICT |" >> $GITHUB_STEP_SUMMARY
+            echo "| No Implicit Any | $NO_IMPLICIT_ANY |" >> $GITHUB_STEP_SUMMARY
+            echo "| Strict Null Checks | $STRICT_NULL_CHECKS |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$STRICT" = "true" ]; then
+              echo "✅ **Strict TypeScript configuration enabled!**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️  **Consider enabling strict TypeScript for better type safety**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload code quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality
+          path: eslint-report.txt
+          retention-days: 30
+
+  # Test coverage analysis
+  coverage-analysis:
+    name: Test Coverage Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Analyze coverage
+        run: |
+          echo "Analyzing test coverage..."
+          
+          if [ -f coverage/lcov.info ]; then
+            echo "## 🧪 Test Coverage Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Parse coverage data
+            TOTAL_LINES=$(grep -c "LF:" coverage/lcov.info || echo "0")
+            COVERED_LINES=$(grep -c "LH:" coverage/lcov.info | grep -v "0" | wc -l || echo "0")
+            
+            if [ "$TOTAL_LINES" -gt 0 ]; then
+              COVERAGE_PERCENT=$((COVERED_LINES * 100 / TOTAL_LINES))
+              echo "**Overall Coverage:** $COVERAGE_PERCENT%" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              if [ "$COVERAGE_PERCENT" -ge 80 ]; then
+                echo "✅ **Excellent coverage!** Above 80% threshold." >> $GITHUB_STEP_SUMMARY
+              elif [ "$COVERAGE_PERCENT" -ge 60 ]; then
+                echo "⚠️  **Good coverage!** Above 60% threshold." >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Low coverage!** Below 60% threshold. Consider adding more tests." >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            
+            # File-level coverage
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**File Coverage:**" >> $GITHUB_STEP_SUMMARY
+            grep "SF:" coverage/lcov.info | head -10 | while read line; do
+              FILE=$(echo "$line" | sed 's/SF://')
+              echo "- \`$FILE\`" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # Performance summary
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [bundle-analysis, lighthouse, code-quality, coverage-analysis]
+    if: always()
+    steps:
+      - name: Performance Status
+        run: |
+          echo "## 📊 Performance & Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Bundle Analysis | ${{ needs.bundle-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lighthouse Audit | ${{ needs.lighthouse.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Coverage | ${{ needs.coverage-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.bundle-analysis.result }}" == "success" && "${{ needs.lighthouse.result }}" == "success" && "${{ needs.code-quality.result }}" == "success" && "${{ needs.coverage-analysis.result }}" == "success" ]]; then
+            echo "✅ **All performance checks passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  **Some performance checks failed!** Please review the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
