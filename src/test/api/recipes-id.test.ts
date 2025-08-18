@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET } from "../../pages/api/recipes/[id]";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock RecipeService
+// Mock RecipeService zgodnie z planem implementacji
 vi.mock("../../../lib/services/recipe.service");
 
 const mockRecipeService = {
@@ -11,12 +11,17 @@ const mockRecipeService = {
 };
 
 describe("/api/recipes/[id]", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
     vi.mocked(mockRecipeService.getUserRating).mockResolvedValue(null);
+
+    // Mock service constructors
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
   });
 
   describe("GET", () => {
@@ -109,7 +114,7 @@ describe("/api/recipes/[id]", () => {
     });
 
     it("should handle permission/RLS errors", async () => {
-      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(new Error("RLS policy violation"));
+      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(new Error("Access denied"));
 
       const mockContext = createMockContext({
         locals: {
@@ -147,11 +152,7 @@ describe("/api/recipes/[id]", () => {
     });
 
     it("should include user rating when available", async () => {
-      vi.mocked(mockRecipeService.getUserRating).mockResolvedValue({
-        rating: "up",
-        recipe_id: "test-recipe-id",
-        user_id: mockUser.id,
-      });
+      vi.mocked(mockRecipeService.getUserRating).mockResolvedValue("up");
 
       const mockContext = createMockContext({
         locals: {
@@ -167,6 +168,25 @@ describe("/api/recipes/[id]", () => {
 
       expect(response.status).toBe(200);
       expect(data.user_rating).toBe("up");
+    });
+
+    it("should handle missing user rating gracefully", async () => {
+      vi.mocked(mockRecipeService.getUserRating).mockResolvedValue(null);
+
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+          authenticatedSupabase: {},
+        },
+        params: { id: "test-recipe-id" },
+      });
+
+      const response = await GET(mockContext);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.user_rating).toBeNull();
     });
   });
 });

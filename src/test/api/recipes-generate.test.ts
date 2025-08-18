@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "../../pages/api/recipes/generate";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock services
+// Mock services zgodnie z planem implementacji
 vi.mock("../../../lib/services/recipe.service");
 vi.mock("../../../lib/services/profile.service");
 vi.mock("../../../lib/services/ai.service");
@@ -20,7 +20,7 @@ const mockAiService = {
 };
 
 describe("/api/recipes/generate", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
@@ -40,6 +40,17 @@ describe("/api/recipes/generate", () => {
       instructions: "Test instructions",
       query: "Test query",
     });
+
+    // Mock service constructors
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
+    vi.doMock("../../../lib/services/profile.service", () => ({
+      ProfileService: vi.fn().mockImplementation(() => mockProfileService),
+    }));
+    vi.doMock("../../../lib/services/ai.service", () => ({
+      AiService: vi.fn().mockImplementation(() => mockAiService),
+    }));
   });
 
   describe("POST", () => {
@@ -118,15 +129,14 @@ describe("/api/recipes/generate", () => {
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}), // Missing required query field
+        body: JSON.stringify({ query: "" }),
       });
 
       const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Validation failed");
-      expect(data.details).toBeDefined();
+      expect(data.error).toBe("Query is required");
     });
 
     it("should return 404 when user profile is not found", async () => {
@@ -172,11 +182,11 @@ describe("/api/recipes/generate", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to generate recipe");
     });
 
     it("should handle recipe creation errors gracefully", async () => {
-      vi.mocked(mockRecipeService.createRecipe).mockRejectedValue(new Error("Database error"));
+      vi.mocked(mockRecipeService.createRecipe).mockRejectedValue(new Error("Creation error"));
 
       const mockContext = createMockContext({
         locals: {
@@ -195,7 +205,7 @@ describe("/api/recipes/generate", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to save recipe");
     });
 
     it("should accept optional model parameter", async () => {
@@ -209,10 +219,7 @@ describe("/api/recipes/generate", () => {
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: "vegetarian pasta",
-          model: "gpt-4",
-        }),
+        body: JSON.stringify({ query: "vegetarian pasta", model: "gpt-4" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -220,6 +227,71 @@ describe("/api/recipes/generate", () => {
 
       expect(response.status).toBe(200);
       expect(data).toHaveProperty("id");
+    });
+
+    it("should work without model parameter", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+        },
+      });
+
+      const request = new Request("http://localhost:3000/api/recipes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "vegetarian pasta" }),
+      });
+
+      const response = await POST({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty("id");
+    });
+
+    it("should pass user preferences to AI service", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+        },
+      });
+
+      const request = new Request("http://localhost:3000/api/recipes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "vegetarian pasta" }),
+      });
+
+      await POST({ ...mockContext, request });
+
+      expect(mockAiService.generateRecipe).toHaveBeenCalledWith(
+        "vegetarian pasta",
+        ["vegetarian", "gluten-free"],
+        undefined
+      );
+    });
+
+    it("should handle missing query parameter", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+        },
+      });
+
+      const request = new Request("http://localhost:3000/api/recipes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Query is required");
     });
   });
 });

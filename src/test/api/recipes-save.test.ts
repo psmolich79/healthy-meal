@@ -2,12 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST, DELETE } from "../../pages/api/recipes/[id]/save";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock services
-vi.mock("../../../lib/services/recipe.service", () => ({
-  RecipeService: vi.fn(),
-}));
+// Mock services zgodnie z planem implementacji
+vi.mock("../../../lib/services/recipe.service");
 
-// Mock service instances
 const mockRecipeService = {
   getRecipe: vi.fn(),
   saveRecipe: vi.fn(),
@@ -15,7 +12,7 @@ const mockRecipeService = {
 };
 
 describe("/api/recipes/[id]/save", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
@@ -24,8 +21,9 @@ describe("/api/recipes/[id]/save", () => {
     vi.mocked(mockRecipeService.unsaveRecipe).mockResolvedValue(true);
 
     // Mock service constructors
-    const { RecipeService } = require("../../../lib/services/recipe.service");
-    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
   });
 
   describe("POST", () => {
@@ -79,12 +77,11 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: {},
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/save`, {
+      const request = new Request("http://localhost:3000/api/recipes//save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -104,12 +101,11 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -129,7 +125,6 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -144,7 +139,7 @@ describe("/api/recipes/[id]/save", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to save recipe");
     });
   });
 
@@ -161,7 +156,6 @@ describe("/api/recipes/[id]/save", () => {
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
       const response = await DELETE({ ...mockContext, request });
@@ -182,7 +176,6 @@ describe("/api/recipes/[id]/save", () => {
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
       const response = await DELETE({ ...mockContext, request });
@@ -197,14 +190,12 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: {},
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/save`, {
+      const request = new Request("http://localhost:3000/api/recipes//save", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
       const response = await DELETE({ ...mockContext, request });
@@ -221,14 +212,12 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/save", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
       const response = await DELETE({ ...mockContext, request });
@@ -245,21 +234,19 @@ describe("/api/recipes/[id]/save", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
       const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to unsave recipe");
     });
   });
 });

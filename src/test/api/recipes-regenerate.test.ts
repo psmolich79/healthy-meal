@@ -2,16 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "../../pages/api/recipes/[id]/regenerate";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock services
-vi.mock("../../../lib/services/ai.service", () => ({
-  AiService: vi.fn(),
-}));
+// Mock services zgodnie z planem implementacji
+vi.mock("../../../lib/services/ai.service");
+vi.mock("../../../lib/services/recipe.service");
 
-vi.mock("../../../lib/services/recipe.service", () => ({
-  RecipeService: vi.fn(),
-}));
-
-// Mock service instances
 const mockAiService = {
   generateRecipe: vi.fn(),
 };
@@ -22,25 +16,31 @@ const mockRecipeService = {
 };
 
 describe("/api/recipes/[id]/regenerate", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
-    vi.mocked(mockAiService.generateRecipe).mockResolvedValue({
-      title: "Test Recipe",
-      ingredients: ["ingredient 1", "ingredient 2"],
-      instructions: ["step 1", "step 2"],
-      shopping_list: ["item 1", "item 2"],
-      updated_at: new Date().toISOString(),
-    });
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
-    vi.mocked(mockRecipeService.updateRecipe).mockResolvedValue(true);
+    vi.mocked(mockRecipeService.updateRecipe).mockResolvedValue({
+      ...mockRecipe,
+      instructions: "Updated instructions",
+      ingredients: "Updated ingredients",
+    });
+    vi.mocked(mockAiService.generateRecipe).mockResolvedValue({
+      title: "Regenerated Recipe",
+      ingredients: "Updated ingredients",
+      shopping_list: "Updated shopping list",
+      instructions: "Updated instructions",
+      query: "Updated query",
+    });
 
     // Mock service constructors
-    const { AiService } = require("../../../lib/services/ai.service");
-    const { RecipeService } = require("../../../lib/services/recipe.service");
-    vi.mocked(AiService).mockImplementation(() => mockAiService);
-    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
+    vi.doMock("../../../lib/services/ai.service", () => ({
+      AiService: vi.fn().mockImplementation(() => mockAiService),
+    }));
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
   });
 
   describe("POST", () => {
@@ -57,15 +57,15 @@ describe("/api/recipes/[id]/regenerate", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.title).toBe("Test Recipe");
-      expect(data.updated_at).toBeDefined();
+      expect(data.message).toBe("Recipe regenerated successfully");
+      expect(data.recipe).toBeDefined();
     });
 
     it("should return 401 when user is not authenticated", async () => {
@@ -80,7 +80,7 @@ describe("/api/recipes/[id]/regenerate", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -95,15 +95,14 @@ describe("/api/recipes/[id]/regenerate", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: {},
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/regenerate`, {
+      const request = new Request("http://localhost:3000/api/recipes//regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -118,7 +117,6 @@ describe("/api/recipes/[id]/regenerate", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -143,15 +141,14 @@ describe("/api/recipes/[id]/regenerate", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -162,22 +159,23 @@ describe("/api/recipes/[id]/regenerate", () => {
     });
 
     it("should return 403 when user is not the recipe owner", async () => {
-      const otherUserRecipe = { ...mockRecipe, user_id: "other-user" };
+      const otherUser = { ...mockUser, id: "other-user-id" };
+      const otherUserRecipe = { ...mockRecipe, user_id: "other-user-id" };
+
       vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(otherUserRecipe);
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: otherUserRecipe.id },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
+      const request = new Request(`http://localhost:3000/api/recipes/${otherUserRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -194,7 +192,6 @@ describe("/api/recipes/[id]/regenerate", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -202,14 +199,14 @@ describe("/api/recipes/[id]/regenerate", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to regenerate recipe");
     });
 
     it("should handle recipe update errors gracefully", async () => {
@@ -219,7 +216,6 @@ describe("/api/recipes/[id]/regenerate", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -227,14 +223,14 @@ describe("/api/recipes/[id]/regenerate", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o" }),
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to update recipe");
     });
 
     it("should accept optional model parameter", async () => {
@@ -250,14 +246,14 @@ describe("/api/recipes/[id]/regenerate", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-3.5-turbo" }),
+        body: JSON.stringify({ model: "gpt-4" }),
       });
 
       const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toBeDefined();
+      expect(data.message).toBe("Recipe regenerated successfully");
     });
 
     it("should work without model parameter", async () => {
@@ -280,7 +276,7 @@ describe("/api/recipes/[id]/regenerate", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toBeDefined();
+      expect(data.message).toBe("Recipe regenerated successfully");
     });
   });
 });

@@ -2,28 +2,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PUT } from "../../pages/api/recipes/[id]/visibility";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock services
-vi.mock("../../../lib/services/recipe.service", () => ({
-  RecipeService: vi.fn(),
-}));
+// Mock services zgodnie z planem implementacji
+vi.mock("../../../lib/services/recipe.service");
 
-// Mock service instances
 const mockRecipeService = {
   getRecipe: vi.fn(),
   updateVisibility: vi.fn(),
 };
 
 describe("/api/recipes/[id]/visibility", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
-    vi.mocked(mockRecipeService.updateVisibility).mockResolvedValue(true);
+    vi.mocked(mockRecipeService.updateVisibility).mockResolvedValue({
+      ...mockRecipe,
+      is_visible: true,
+    });
 
     // Mock service constructors
-    const { RecipeService } = require("../../../lib/services/recipe.service");
-    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
   });
 
   describe("PUT", () => {
@@ -40,14 +41,15 @@ describe("/api/recipes/[id]/visibility", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false }),
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.is_visible).toBe(false);
+      expect(data.message).toBe("Recipe visibility updated successfully");
+      expect(data.recipe.is_visible).toBe(true);
     });
 
     it("should return 401 when user is not authenticated", async () => {
@@ -62,7 +64,7 @@ describe("/api/recipes/[id]/visibility", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false }),
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -77,15 +79,14 @@ describe("/api/recipes/[id]/visibility", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: {},
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/visibility`, {
+      const request = new Request("http://localhost:3000/api/recipes//visibility", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false }),
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -100,7 +101,6 @@ describe("/api/recipes/[id]/visibility", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -123,7 +123,6 @@ describe("/api/recipes/[id]/visibility", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -138,8 +137,7 @@ describe("/api/recipes/[id]/visibility", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Validation failed");
-      expect(data.details).toBeDefined();
+      expect(data.error).toBe("Invalid visibility value");
     });
 
     it("should return 404 when recipe is not found", async () => {
@@ -149,15 +147,14 @@ describe("/api/recipes/[id]/visibility", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/visibility", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false }),
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -174,7 +171,6 @@ describe("/api/recipes/[id]/visibility", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -182,14 +178,14 @@ describe("/api/recipes/[id]/visibility", () => {
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false }),
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Internal server error");
+      expect(data.error).toBe("Failed to update recipe visibility");
     });
 
     it("should accept true value for visibility", async () => {
@@ -212,7 +208,35 @@ describe("/api/recipes/[id]/visibility", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.is_visible).toBe(true);
+      expect(data.recipe.is_visible).toBe(true);
+    });
+
+    it("should accept false value for visibility", async () => {
+      vi.mocked(mockRecipeService.updateVisibility).mockResolvedValue({
+        ...mockRecipe,
+        is_visible: false,
+      });
+
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+          authenticatedSupabase: {},
+        },
+        params: { id: mockRecipe.id },
+      });
+
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_visible: false }),
+      });
+
+      const response = await PUT({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.recipe.is_visible).toBe(false);
     });
   });
 });
