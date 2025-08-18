@@ -166,20 +166,28 @@ export const onRequest = defineMiddleware(async (context, next) => {
     console.log("No valid authorization header found");
   }
 
-  // For API routes, continue processing
-  if (isApiRoute) {
-    console.log("Middleware - API route detected, locals before next():", {
-      hasUser: !!context.locals.user,
-      userId: context.locals.user?.id,
-      hasSupabase: !!context.locals.supabase,
-      supabaseType: typeof context.locals.supabase,
-      hasAuthenticatedSupabase: !!context.locals.authenticatedSupabase,
-      supabaseKeys: context.locals.supabase ? Object.keys(context.locals.supabase) : null,
-      hasAuth: context.locals.supabase?.auth ? true : false,
-      hasFrom: typeof context.locals.supabase?.from === "function",
-    });
-    return next();
-  }
+        // For API routes, continue processing
+      if (isApiRoute) {
+        console.log("Middleware - API route detected, locals before next():", {
+          hasUser: !!context.locals.user,
+          userId: context.locals.user?.id,
+          hasSupabase: !!context.locals.supabase,
+          supabaseType: typeof context.locals.supabase,
+          hasAuthenticatedSupabase: !!context.locals.authenticatedSupabase,
+          supabaseKeys: context.locals.supabase ? Object.keys(context.locals.supabase) : null,
+          hasAuth: context.locals.supabase?.auth ? true : false,
+          hasFrom: typeof context.locals.supabase?.from === "function",
+        });
+        
+        // Debug: check if user is properly set
+        if (!context.locals.user) {
+          console.log("⚠️ WARNING: No user in locals for API route!");
+        } else {
+          console.log("✅ User found in locals:", context.locals.user);
+        }
+        
+        return next();
+      }
 
   // For non-API routes, the authMiddleware would have already called next()
   return next();

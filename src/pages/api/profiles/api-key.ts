@@ -24,6 +24,14 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     const userId = user.id;
     const body = await request.json();
 
+    console.log("API Key endpoint - received body:", {
+      hasApiKey: !!body.api_key,
+      apiKeyLength: body.api_key?.length || 0,
+      apiKeyPreview: body.api_key ? `${body.api_key.substring(0, 20)}...` : 'none',
+      apiKeyStartsWithSk: body.api_key?.startsWith('sk-') || false,
+      provider: body.provider
+    });
+
     // Validate input
     const validation = apiKeySchema.safeParse(body);
     if (!validation.success) {
