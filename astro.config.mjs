@@ -13,6 +13,20 @@ export default defineConfig({
   server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: [
+        '@radix-ui/react-label',
+        '@radix-ui/react-checkbox', 
+        '@radix-ui/react-separator',
+        'lucide-react'
+      ],
+      exclude: []
+    },
+    server: {
+      hmr: {
+        overlay: false
+      }
+    }
   },
   adapter: node({
     mode: "standalone",
