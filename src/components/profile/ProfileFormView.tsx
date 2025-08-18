@@ -36,6 +36,8 @@ const ProfileFormViewInner: React.FC<ProfileFormViewProps> = ({ initialPreferenc
     apiKeyUsageCount,
     updateApiKey,
     deleteApiKey,
+    // API Usage limits
+    apiUsageLimits,
   } = useProfileForm();
 
   const handleSaveClick = async () => {
@@ -101,6 +103,10 @@ const ProfileFormViewInner: React.FC<ProfileFormViewProps> = ({ initialPreferenc
               apiKeyUsageCount={apiKeyUsageCount}
               onApiKeyUpdate={updateApiKey}
               onApiKeyDelete={deleteApiKey}
+              dailyLimit={apiUsageLimits?.daily_limit}
+              currentUsage={apiUsageLimits?.current_usage}
+              remainingUsage={apiUsageLimits?.remaining_usage}
+              resetTime={apiUsageLimits?.reset_time}
             />
 
             {/* Save Button */}

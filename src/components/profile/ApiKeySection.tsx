@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,11 @@ interface ApiKeySectionProps {
   onApiKeyUpdate: (apiKey: string) => Promise<void>;
   onApiKeyDelete: () => Promise<void>;
   isLoading?: boolean;
+  // API usage limits
+  dailyLimit?: number;
+  currentUsage?: number;
+  remainingUsage?: number;
+  resetTime?: string;
 }
 
 export const ApiKeySection: React.FC<ApiKeySectionProps> = ({
@@ -26,13 +31,23 @@ export const ApiKeySection: React.FC<ApiKeySectionProps> = ({
   onApiKeyUpdate,
   onApiKeyDelete,
   isLoading = false,
+  // API usage limits
+  dailyLimit,
+  currentUsage,
+  remainingUsage,
+  resetTime,
 }) => {
-  const [apiKey, setApiKey] = useState(currentApiKey || "");
+  const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [isEditing, setIsEditing] = useState(!currentApiKey);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+
+  // Update editing state when currentApiKey changes
+  useEffect(() => {
+    setIsEditing(!currentApiKey);
+  }, [currentApiKey]);
 
   const handleSave = async () => {
     if (!apiKey.trim()) {
@@ -77,12 +92,12 @@ export const ApiKeySection: React.FC<ApiKeySectionProps> = ({
 
   const handleEdit = () => {
     setIsEditing(true);
-    setApiKey(currentApiKey || "");
+    setApiKey(""); // Don't show masked key in edit field
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setApiKey(currentApiKey || "");
+    setApiKey(""); // Clear the edit field
   };
 
   const formatDate = (dateString?: string) => {
@@ -129,6 +144,30 @@ export const ApiKeySection: React.FC<ApiKeySectionProps> = ({
             </div>
             <div className="text-right text-sm text-slate-600 dark:text-slate-400">
               <div>Ostatnio użyty: {formatDate(lastUsedAt)}</div>
+            </div>
+          </div>
+        )}
+
+        {/* API Usage Limits */}
+        {dailyLimit !== undefined && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 mb-2">
+              <Info className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                Limity użycia API
+              </span>
+            </div>
+            <div className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
+              {dailyLimit === -1 ? (
+                <div>✅ Bez ograniczeń - używasz własnego klucza API</div>
+              ) : (
+                <>
+                  <div>📊 Dzienny limit: {dailyLimit} przepisów</div>
+                  <div>📈 Użyto dzisiaj: {currentUsage || 0}</div>
+                  <div>🎯 Pozostało: {remainingUsage || 0}</div>
+                  <div>🔄 Reset: {resetTime ? new Date(resetTime).toLocaleString("pl-PL") : "Nieznane"}</div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -184,7 +223,7 @@ export const ApiKeySection: React.FC<ApiKeySectionProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-400">
-                Klucz API: {currentApiKey ? "••••••••" + currentApiKey.slice(-4) : "Brak"}
+                Klucz API: {currentApiKey ? "••••••••••••••••••••••••••••••••••••••••••••••••••" : "Brak"}
               </span>
             </div>
             <div className="flex gap-2">

@@ -20,6 +20,11 @@ interface PreferencesAccordionProps {
   apiKeyUsageCount?: number;
   onApiKeyUpdate?: (apiKey: string) => Promise<void>;
   onApiKeyDelete?: () => Promise<void>;
+  // API usage limits
+  dailyLimit?: number;
+  currentUsage?: number;
+  remainingUsage?: number;
+  resetTime?: string;
 }
 
 export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
@@ -33,6 +38,11 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
   apiKeyUsageCount,
   onApiKeyUpdate,
   onApiKeyDelete,
+  // API usage limits
+  dailyLimit,
+  currentUsage,
+  remainingUsage,
+  resetTime,
 }) => {
   // Count preferences by category
   const dietCount = preferences.filter((pref) => DIET_PREFERENCES.some((diet) => diet.id === pref)).length;
@@ -135,6 +145,10 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
               onApiKeyUpdate={onApiKeyUpdate}
               onApiKeyDelete={onApiKeyDelete}
               isLoading={isLoading}
+              dailyLimit={dailyLimit}
+              currentUsage={currentUsage}
+              remainingUsage={remainingUsage}
+              resetTime={resetTime}
             />
           </AccordionContent>
         </AccordionItem>
