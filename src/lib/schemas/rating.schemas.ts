@@ -13,12 +13,10 @@ import { z } from "zod";
  * @see PUT /api/recipes/{id}/rating
  */
 export const upsertRatingSchema = z.object({
-  rating: z
-    .enum(["up", "down"], {
-      required_error: "Rating is required",
-      invalid_type_error: "Rating must be either 'up' or 'down'",
-    })
-    .transform((val) => (val === "up" ? 1 : -1)),
+  rating: z.enum(["up", "down"], {
+    required_error: "Rating is required",
+    invalid_type_error: "Rating must be either 'up' or 'down'",
+  }),
 });
 
 /**

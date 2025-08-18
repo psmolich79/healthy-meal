@@ -32,8 +32,11 @@ export type SavedRecipe = Tables<"saved_recipes">;
 /** Represents a log entry for an AI generation event. */
 export type AiUsage = Tables<"ai_usage">;
 
+/** Represents a user's API key for external AI services. */
+export type UserApiKey = Tables<"user_api_keys">;
+
 /** Represents the possible values for a recipe rating. */
-export type RatingType = 1 | -1;
+export type RatingType = "up" | "down";
 
 // #endregion
 
@@ -50,6 +53,15 @@ export type ProfileDto = Omit<Profile, "status_changed_at">;
  * @see PUT /api/profiles/me
  */
 export type UpdateProfileCommand = Pick<Profile, "preferences">;
+
+/**
+ * Command model for updating the current user's API key.
+ * @see PUT /api/profiles/api-key
+ */
+export type UpdateApiKeyCommand = {
+  api_key: string;
+  provider?: string;
+};
 
 /**
  * DTO for the response after updating a user's profile.
