@@ -119,6 +119,9 @@ export const onRequest = defineMiddleware(async ({ request, redirect, locals }, 
     isAuthenticated: !!session,
   };
 
+  // Store user directly in locals for API routes compatibility
+  (locals as any).user = session?.user || null;
+
   // Store authenticated Supabase client for API routes
   (locals as any).supabase = supabase;
   (locals as any).authenticatedSupabase = supabase;
@@ -156,6 +159,7 @@ declare namespace App {
       session: any;
       isAuthenticated: boolean;
     };
+    user: any; // Direct access to user for API routes
     supabase: any;
     authenticatedSupabase: any;
   }

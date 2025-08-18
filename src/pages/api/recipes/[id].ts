@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { RecipeService } from "../../../lib/services/recipe.service";
 import { recipeIdSchema } from "../../../lib/schemas/recipe.schemas";
-import type { RecipeDetailsDto } from "../../../types";
+import type { RecipeDetailsDto, RatingType } from "../../../types";
 
 /**
  * API endpoint for managing individual recipes.
@@ -82,7 +82,7 @@ export const GET: APIRoute = async ({ params, locals, request }) => {
     const recipeDetailsDto: RecipeDetailsDto = {
       ...recipe,
       is_saved: false, // TODO: Implement saved recipes functionality
-      user_rating: userRating?.rating || null,
+      user_rating: (userRating?.rating as RatingType) || null,
     };
 
     return new Response(JSON.stringify(recipeDetailsDto), {
