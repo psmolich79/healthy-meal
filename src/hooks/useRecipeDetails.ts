@@ -159,14 +159,24 @@ export const useRecipeDetails = (recipeId: string) => {
           error: sessionError,
         } = await supabaseClient.auth.getSession();
 
+        console.log("Rating - Session data:", {
+          hasSession: !!session,
+          hasAccessToken: !!session?.access_token,
+          accessTokenLength: session?.access_token?.length,
+          accessTokenPreview: session?.access_token?.substring(0, 50) + "...",
+        });
+
         if (sessionError || !session) {
           throw new Error("Musisz być zalogowany, aby ocenić przepis");
         }
 
         const command: UpsertRatingCommand = { rating };
 
+        // Use PUT if rating already exists, POST if it's new
+        const method = state.recipe.user_rating ? "PUT" : "POST";
+
         const response = await fetch(`/api/recipes/${recipeId}/rating`, {
-          method: "POST",
+          method,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
@@ -192,6 +202,10 @@ export const useRecipeDetails = (recipeId: string) => {
           throw new Error(errorMessage);
         }
 
+        // Parse response to get updated rating data
+        const responseData = await response.json();
+        console.log("Rating response data:", responseData);
+
         setState((prev) => ({
           ...prev,
           isRating: false,
@@ -211,6 +225,132 @@ export const useRecipeDetails = (recipeId: string) => {
     },
     [state.recipe, recipeId]
   );
+
+  // Remove rating
+  const removeRating = useCallback(async () => {
+    if (!state.recipe) return false;
+
+    try {
+      setState((prev) => ({ ...prev, isRating: true, error: null }));
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error("Musisz być zalogowany, aby usunąć ocenę");
+      }
+
+      const response = await fetch(`/api/recipes/${state.recipe.id}/rating`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Błąd podczas usuwania oceny";
+
+        switch (response.status) {
+          case 401:
+            errorMessage = "Musisz być zalogowany, aby usunąć ocenę";
+            break;
+          case 403:
+            errorMessage = "Nie możesz usunąć oceny tego przepisu";
+            break;
+          case 500:
+            errorMessage = "Błąd serwera. Spróbuj ponownie później";
+            break;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isRating: false,
+        recipe: prev.recipe ? { ...prev.recipe, user_rating: null } : null,
+      }));
+
+      return true;
+    } catch (error) {
+      console.error("Error removing rating:", error);
+      setState((prev) => ({
+        ...prev,
+        isRating: false,
+        error: error instanceof Error ? error.message : "Nieznany błąd",
+      }));
+      return false;
+    }
+  }, [state.recipe]);
+
+  // Change recipe visibility
+  const changeVisibility = useCallback(async (isVisible: boolean) => {
+    if (!state.recipe) return false;
+
+    try {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error("Musisz być zalogowany, aby zmienić widoczność przepisu");
+      }
+
+      const response = await fetch(`/api/recipes/${state.recipe.id}/visibility`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ is_visible: isVisible }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Błąd podczas zmiany widoczności przepisu";
+
+        switch (response.status) {
+          case 401:
+            errorMessage = "Musisz być zalogowany, aby zmienić widoczność przepisu";
+            break;
+          case 403:
+            errorMessage = "Nie możesz zmienić widoczności tego przepisu";
+            break;
+          case 404:
+            errorMessage = "Przepis nie został znaleziony";
+            break;
+          case 500:
+            errorMessage = "Błąd serwera. Spróbuj ponownie później";
+            break;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        recipe: prev.recipe ? { ...prev.recipe, is_visible: result.is_visible } : null,
+      }));
+
+      return true;
+    } catch (error) {
+      console.error("Error changing recipe visibility:", error);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Nieznany błąd",
+      }));
+      return false;
+    }
+  }, [state.recipe]);
 
   // Regenerate recipe
   const regenerateRecipe = useCallback(async () => {
@@ -303,6 +443,8 @@ export const useRecipeDetails = (recipeId: string) => {
     fetchRecipe,
     saveRecipe,
     rateRecipe,
+    removeRating,
+    changeVisibility,
     regenerateRecipe,
     clearError,
   };

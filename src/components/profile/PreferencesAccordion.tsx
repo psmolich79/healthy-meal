@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DietSection } from "./DietSection";
 import { CuisineSection } from "./CuisineSection";
 import { AllergiesSection } from "./AllergiesSection";
+import { ApiKeySection } from "./ApiKeySection";
 import { DIET_PREFERENCES, CUISINE_PREFERENCES, ALLERGY_PREFERENCES } from "@/data/preferences";
 
 interface PreferencesAccordionProps {
@@ -12,6 +13,13 @@ interface PreferencesAccordionProps {
   onPreferencesChange: (preferences: string[]) => void;
   isLoading: boolean;
   className?: string;
+  // API Key props
+  apiKey?: string;
+  isApiKeyActive?: boolean;
+  apiKeyLastUsedAt?: string;
+  apiKeyUsageCount?: number;
+  onApiKeyUpdate?: (apiKey: string) => Promise<void>;
+  onApiKeyDelete?: () => Promise<void>;
 }
 
 export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
@@ -19,6 +27,12 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
   onPreferencesChange,
   isLoading,
   className = "",
+  apiKey,
+  isApiKeyActive,
+  apiKeyLastUsedAt,
+  apiKeyUsageCount,
+  onApiKeyUpdate,
+  onApiKeyDelete,
 }) => {
   // Count preferences by category
   const dietCount = preferences.filter((pref) => DIET_PREFERENCES.some((diet) => diet.id === pref)).length;
@@ -103,6 +117,24 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
               onChange={onPreferencesChange}
               isExpanded={true}
               disabled={isLoading}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* API Key Section */}
+        <AccordionItem value="api-key" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline py-4">
+            {getTriggerContent("Klucz API", apiKey ? 1 : 0, "🔑")}
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <ApiKeySection
+              currentApiKey={apiKey}
+              isActive={isApiKeyActive}
+              lastUsedAt={apiKeyLastUsedAt}
+              usageCount={apiKeyUsageCount}
+              onApiKeyUpdate={onApiKeyUpdate}
+              onApiKeyDelete={onApiKeyDelete}
+              isLoading={isLoading}
             />
           </AccordionContent>
         </AccordionItem>

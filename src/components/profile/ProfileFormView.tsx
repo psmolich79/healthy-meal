@@ -8,13 +8,14 @@ import { ProfileHeader } from "./ProfileHeader";
 import { PreferencesAccordion } from "./PreferencesAccordion";
 import { SaveButton } from "./SaveButton";
 import { useProfileForm } from "@/hooks/useProfileForm";
+import { ToastProvider } from "@/components/ui/toast";
 
 interface ProfileFormViewProps {
   initialPreferences?: string[];
   className?: string;
 }
 
-export const ProfileFormView: React.FC<ProfileFormViewProps> = ({ initialPreferences = [], className = "" }) => {
+const ProfileFormViewInner: React.FC<ProfileFormViewProps> = ({ initialPreferences = [], className = "" }) => {
   const {
     preferences,
     profile,
@@ -28,6 +29,13 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({ initialPrefere
     updatePreferences,
     savePreferences,
     clearError,
+    // API Key state
+    apiKey,
+    isApiKeyActive,
+    apiKeyLastUsedAt,
+    apiKeyUsageCount,
+    updateApiKey,
+    deleteApiKey,
   } = useProfileForm();
 
   const handleSaveClick = async () => {
@@ -87,6 +95,12 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({ initialPrefere
               preferences={preferences}
               onPreferencesChange={updatePreferences}
               isLoading={isSaving}
+              apiKey={apiKey}
+              isApiKeyActive={isApiKeyActive}
+              apiKeyLastUsedAt={apiKeyLastUsedAt}
+              apiKeyUsageCount={apiKeyUsageCount}
+              onApiKeyUpdate={updateApiKey}
+              onApiKeyDelete={deleteApiKey}
             />
 
             {/* Save Button */}
@@ -143,5 +157,14 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({ initialPrefere
         )}
       </div>
     </ErrorBoundary>
+  );
+};
+
+// Main export component with ToastProvider
+export const ProfileFormView: React.FC<ProfileFormViewProps> = (props) => {
+  return (
+    <ToastProvider>
+      <ProfileFormViewInner {...props} />
+    </ToastProvider>
   );
 };

@@ -9,6 +9,11 @@ interface ProfileFormState {
   isSaving: boolean;
   error: string | null;
   profile: ProfileDto | null;
+  // API Key state
+  apiKey: string | null;
+  isApiKeyActive: boolean;
+  apiKeyLastUsedAt: string | null;
+  apiKeyUsageCount: number;
 }
 
 interface AccordionState {
@@ -28,6 +33,11 @@ export const useProfileForm = () => {
     isSaving: false,
     error: null,
     profile: null,
+    // API Key state
+    apiKey: null,
+    isApiKeyActive: false,
+    apiKeyLastUsedAt: null,
+    apiKeyUsageCount: 0,
   });
 
   const [accordionState, setAccordionState] = useState<AccordionState>({
@@ -83,12 +93,33 @@ export const useProfileForm = () => {
       const profile: ProfileDto = await response.json();
       const preferences = profile.preferences || [];
 
+      // Fetch API key info
+      let apiKeyInfo = null;
+      try {
+        const apiKeyResponse = await fetch("/api/profiles/api-key", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          credentials: "include",
+        });
+        if (apiKeyResponse.ok) {
+          apiKeyInfo = await apiKeyResponse.json();
+        }
+      } catch (error) {
+        console.log("Could not fetch API key info:", error);
+      }
+
       setState((prev) => ({
         ...prev,
         isLoading: false,
         preferences,
         originalPreferences: [...preferences],
         profile,
+        // API Key info
+        apiKey: apiKeyInfo?.data?.api_key || null,
+        isApiKeyActive: apiKeyInfo?.data?.is_active || false,
+        apiKeyLastUsedAt: apiKeyInfo?.data?.last_used_at || null,
+        apiKeyUsageCount: apiKeyInfo?.data?.usage_count || 0,
       }));
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -267,9 +298,124 @@ export const useProfileForm = () => {
     return await savePreferences(state.preferences);
   }, [autoSaveTimeout, savePreferences, state.preferences]);
 
+  // API Key management functions
+  const updateApiKey = useCallback(async (apiKey: string) => {
+    try {
+      setState((prev) => ({ ...prev, isSaving: true, error: null }));
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error("Musisz być zalogowany");
+      }
+
+      const response = await fetch("/api/profiles/api-key", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          api_key: apiKey,
+          provider: "openai",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Błąd podczas aktualizacji klucza API");
+      }
+
+      const result = await response.json();
+
+      // Update local state immediately
+      setState((prev) => ({
+        ...prev,
+        isSaving: false,
+        apiKey: apiKey,
+        isApiKeyActive: true,
+        apiKeyLastUsedAt: null,
+        apiKeyUsageCount: 0,
+      }));
+
+      // Refresh profile data to get updated API key info from database
+      await fetchProfile();
+
+      return result;
+    } catch (error) {
+      console.error("Error updating API key:", error);
+      setState((prev) => ({
+        ...prev,
+        isSaving: false,
+        error: error instanceof Error ? error.message : "Błąd podczas aktualizacji klucza API",
+      }));
+      throw error;
+    }
+  }, []);
+
+  const deleteApiKey = useCallback(async () => {
+    try {
+      setState((prev) => ({ ...prev, isSaving: true, error: null }));
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error("Musisz być zalogowany");
+      }
+
+      const response = await fetch("/api/profiles/api-key", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Błąd podczas usuwania klucza API");
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isSaving: false,
+        apiKey: null,
+        isApiKeyActive: false,
+        apiKeyLastUsedAt: null,
+        apiKeyUsageCount: 0,
+      }));
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      setState((prev) => ({
+        ...prev,
+        isSaving: false,
+        error: error instanceof Error ? error.message : "Błąd podczas usuwania klucza API",
+      }));
+      throw error;
+    }
+  }, []);
+
   // Initialize on mount
   useEffect(() => {
-    fetchProfile();
+    // Only fetch profile if user is authenticated
+    const checkAndFetchProfile = async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+          fetchProfile();
+        }
+      } catch (error) {
+        console.log("No active session, skipping profile fetch");
+      }
+    };
+
+    checkAndFetchProfile();
 
     // Cleanup timeout on unmount
     return () => {
@@ -310,5 +456,9 @@ export const useProfileForm = () => {
     savePreferences: manualSave,
     clearError,
     fetchProfile,
+    
+    // API Key actions
+    updateApiKey,
+    deleteApiKey,
   };
 };
