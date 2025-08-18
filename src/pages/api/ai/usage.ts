@@ -31,10 +31,15 @@ export const prerender = false;
  */
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
+    console.log("GET /api/ai/usage - Starting request");
+    
     // Get user and supabase client from middleware
     const { user, supabase } = locals;
+    console.log("GET /api/ai/usage - User from locals:", user?.id);
+    console.log("GET /api/ai/usage - Supabase client type:", typeof supabase);
 
     if (!user?.id) {
+      console.log("GET /api/ai/usage - No user found in locals");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -44,14 +49,17 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Parse and validate query parameters
     const url = new URL(request.url);
     const queryParams = {
-      period: url.searchParams.get("period"),
-      start_date: url.searchParams.get("start_date"),
-      end_date: url.searchParams.get("end_date"),
+      period: url.searchParams.get("period") || "month",
+      start_date: url.searchParams.get("start_date") || undefined,
+      end_date: url.searchParams.get("end_date") || undefined,
     };
+    
+    console.log("GET /api/ai/usage - Query params:", queryParams);
 
     // Validate query parameters using Zod
     const validationResult = aiUsageQuerySchema.safeParse(queryParams);
     if (!validationResult.success) {
+      console.error("GET /api/ai/usage - Validation error:", validationResult.error.errors);
       return new Response(
         JSON.stringify({
           error: "Invalid query parameters",
@@ -65,12 +73,21 @@ export const GET: APIRoute = async ({ request, locals }) => {
     }
 
     const { period, start_date, end_date } = validationResult.data;
+    console.log("GET /api/ai/usage - Validated params:", { period, start_date, end_date });
 
     // Create AiService instance
     const aiService = new AiService(supabase);
 
     // Get AI usage statistics
+    // For non-custom periods, AiService will calculate dates automatically
+    // For custom period, we pass the provided dates
+    console.log("GET /api/ai/usage - Calling AiService.getAiUsage");
     const aiUsage = await aiService.getAiUsage(user.id, period, start_date, end_date);
+    console.log("GET /api/ai/usage - AiService result:", {
+      period: aiUsage.period,
+      total_generations: aiUsage.total_generations,
+      total_cost: aiUsage.total_cost
+    });
 
     // Transform to AiUsageDto format
     const aiUsageDto: AiUsageDto = {
@@ -85,6 +102,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       daily_breakdown: aiUsage.daily_breakdown,
     };
 
+    console.log("GET /api/ai/usage - Success, returning data");
     return new Response(JSON.stringify(aiUsageDto), {
       status: 200,
       headers: { "Content-Type": "application/json" },

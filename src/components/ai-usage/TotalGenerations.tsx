@@ -1,20 +1,70 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUpIcon, TrendingDownIcon, MinusIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { TotalGenerationsProps } from './types';
 
-interface TotalGenerationsProps {
-  count: number;
-  className?: string;
-}
+/**
+ * Metric card component for total AI generations
+ */
+export const TotalGenerations: React.FC<TotalGenerationsProps> = ({
+  count,
+  trend,
+  className
+}) => {
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+  };
 
-const TotalGenerations: React.FC<TotalGenerationsProps> = ({ count, className }) => (
-  <Card className={className}>
-    <CardHeader>
-      <CardTitle>Generacje</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <p className="text-2xl font-bold">{count}</p>
-    </CardContent>
-  </Card>
-);
+  const getTrendIcon = () => {
+    if (!trend) return <MinusIcon className="h-4 w-4" />;
+    if (trend > 0) return <TrendingUpIcon className="h-4 w-4 text-green-600" />;
+    return <TrendingDownIcon className="h-4 w-4 text-red-600" />;
+  };
 
-export default TotalGenerations;
+  const getTrendColor = () => {
+    if (!trend) return 'bg-muted text-muted-foreground';
+    if (trend > 0) return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';
+    return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+  };
+
+  const getTrendText = () => {
+    if (!trend) return 'Brak zmian';
+    const absTrend = Math.abs(trend);
+    return `${trend > 0 ? '+' : '-'}${absTrend}%`;
+  };
+
+  return (
+    <Card className={cn('hover:shadow-md transition-shadow', className)}>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">
+              Generowania AI
+            </p>
+            <p className="text-3xl font-bold">
+              {formatNumber(count)}
+            </p>
+          </div>
+          <div className="text-right">
+            <Badge variant="secondary" className={cn('mb-2', getTrendColor())}>
+              <div className="flex items-center gap-1">
+                {getTrendIcon()}
+                {getTrendText()}
+              </div>
+            </Badge>
+            <div className="text-xs text-muted-foreground">
+              vs poprzedni okres
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

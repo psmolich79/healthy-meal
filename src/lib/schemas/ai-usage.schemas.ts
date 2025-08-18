@@ -21,12 +21,10 @@ export const aiUsageQuerySchema = z
       .default("month"),
     start_date: z
       .string()
-      .datetime("Start date must be a valid ISO date string")
       .optional()
       .refine((val) => !val || !isNaN(new Date(val).getTime()), "Start date must be a valid date"),
     end_date: z
       .string()
-      .datetime("End date must be a valid ISO date string")
       .optional()
       .refine((val) => !val || !isNaN(new Date(val).getTime()), "End date must be a valid date"),
   })
