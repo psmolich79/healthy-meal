@@ -28,6 +28,8 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({ recipeId, 
     isSaved,
     saveRecipe,
     rateRecipe,
+    removeRating,
+    changeVisibility,
     regenerateRecipe,
     clearError,
   } = useRecipeDetails(recipeId);
@@ -85,8 +87,11 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({ recipeId, 
   };
 
   const handleRatingRemove = async () => {
-    // For now, we'll just rate as null - this would need API endpoint
-    return true;
+    return await removeRating();
+  };
+
+  const handleVisibilityChange = async (isVisible: boolean) => {
+    return await changeVisibility(isVisible);
   };
 
   const handleRegenerate = async () => {
@@ -129,6 +134,7 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({ recipeId, 
           onSave={handleSave}
           onRatingChange={handleRatingChange}
           onRatingRemove={handleRatingRemove}
+          onVisibilityChange={handleVisibilityChange}
           onRegenerate={handleRegenerate}
           isLoading={isAnyActionLoading}
         />

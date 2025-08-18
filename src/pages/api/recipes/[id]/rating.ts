@@ -82,14 +82,14 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
     }
 
     const { rating } = ratingValidation.data;
-    // rating is now transformed to 1 (up) or -1 (down)
+    // rating is "up" or "down" (string)
 
     // Create RatingService instance with authenticated client for RLS
     const supabaseClient = locals.authenticatedSupabase || locals.supabase;
     const ratingService = new RatingService(supabaseClient);
 
-    // Add or update rating
-    const result = await ratingService.addRating(recipeId, user.id, rating);
+    // Add or update rating using upsert
+    const result = await ratingService.upsertRating(recipeId, user.id, rating);
 
     if (!result) {
       return new Response(JSON.stringify({ error: "Failed to add rating" }), {
@@ -98,10 +98,12 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
       });
     }
 
+    console.log("Rating upsert result:", result);
+
     return new Response(
       JSON.stringify({
         message: "Rating added successfully",
-        rating: result.rating,
+        ...result,
       }),
       {
         status: 200,

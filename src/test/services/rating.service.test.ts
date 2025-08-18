@@ -8,7 +8,7 @@ const mockRating: Rating = {
   id: "rating-123",
   recipe_id: "recipe-123",
   user_id: "user-123",
-  rating: 1, // up rating
+  rating: "up", // up rating
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
 };
@@ -22,7 +22,7 @@ const updatedRating: Rating = {
   id: "rating-123",
   recipe_id: "recipe-123",
   user_id: "user-123",
-  rating: -1, // down rating
+  rating: "down", // down rating
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-02T00:00:00Z",
 };
@@ -74,7 +74,7 @@ describe("RatingService", () => {
         .mockReturnValueOnce({ select: mockSelect }) // for getRating
         .mockReturnValueOnce({ insert: mockInsert }); // for insert
 
-      const result = await ratingService.createRating("recipe-123", "user-123", 1);
+      const result = await ratingService.createRating("recipe-123", "user-123", "up");
 
       expect(result).toEqual(mockRatingWithCanRegenerate);
       expect(mockSupabase.from).toHaveBeenCalledWith("ratings");
@@ -92,7 +92,7 @@ describe("RatingService", () => {
       mockSupabase.from.mockReturnValue({ select: mockSelect });
 
       await expect(
-        ratingService.createRating("recipe-123", "user-123", 1)
+        ratingService.createRating("recipe-123", "user-123", "up")
       ).rejects.toThrow("Rating already exists for this recipe");
     });
 
@@ -122,7 +122,7 @@ describe("RatingService", () => {
         .mockReturnValueOnce({ insert: mockInsert });
 
       await expect(
-        ratingService.createRating("recipe-123", "user-123", 1)
+        ratingService.createRating("recipe-123", "user-123", "up")
       ).rejects.toThrow("Database error");
     });
   });
@@ -151,7 +151,7 @@ describe("RatingService", () => {
         .mockReturnValueOnce({ select: mockSelect })
         .mockReturnValueOnce({ update: mockUpdate });
 
-      const result = await ratingService.updateRating("recipe-123", "user-123", -1);
+      const result = await ratingService.updateRating("recipe-123", "user-123", "down");
 
       expect(result).toEqual(updatedRatingWithCanRegenerate);
       expect(mockSupabase.from).toHaveBeenCalledWith("ratings");
@@ -172,7 +172,7 @@ describe("RatingService", () => {
       mockSupabase.from.mockReturnValue({ select: mockSelect });
 
       await expect(
-        ratingService.updateRating("recipe-123", "user-123", -1)
+        ratingService.updateRating("recipe-123", "user-123", "down")
       ).rejects.toThrow("Rating not found");
     });
   });
@@ -287,7 +287,7 @@ describe("RatingService", () => {
         .mockReturnValueOnce({ select: mockSelect })
         .mockReturnValueOnce({ update: mockUpdate });
 
-      const result = await ratingService.upsertRating("recipe-123", "user-123", -1);
+      const result = await ratingService.upsertRating("recipe-123", "user-123", "down");
 
       expect(result).toEqual(updatedRatingWithCanRegenerate);
     });
@@ -319,7 +319,7 @@ describe("RatingService", () => {
         .mockReturnValueOnce({ update: mockUpdate });
 
       await expect(
-        ratingService.upsertRating("recipe-123", "user-123", -1)
+        ratingService.upsertRating("recipe-123", "user-123", "down")
       ).rejects.toThrow("Update failed");
     });
   });

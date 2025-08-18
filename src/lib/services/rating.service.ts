@@ -38,8 +38,6 @@ export class RatingService {
           recipe_id: recipeId,
           user_id: userId,
           rating,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -76,7 +74,6 @@ export class RatingService {
         .from("ratings")
         .update({
           rating,
-          updated_at: new Date().toISOString(),
         })
         .eq("recipe_id", recipeId)
         .eq("user_id", userId)
@@ -105,14 +102,13 @@ export class RatingService {
   async addRating(recipeId: string, userId: string, rating: RatingType): Promise<{ rating: RatingType } | null> {
     try {
       // Use upsert to create or update rating
+      // Don't set created_at/updated_at - let database handle it
       const { data, error } = await this.supabase
         .from("ratings")
         .upsert({
           recipe_id: recipeId,
           user_id: userId,
           rating,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -195,19 +191,71 @@ export class RatingService {
    */
   async upsertRating(recipeId: string, userId: string, rating: RatingType): Promise<UpsertRatingDto> {
     try {
-      // Try to update first
-      const updatedRating = await this.updateRating(recipeId, userId, rating);
-      if (updatedRating) {
-        return updatedRating;
+      console.log(`Upserting rating: recipeId=${recipeId}, userId=${userId}, rating=${rating}`);
+      
+      // Use Supabase upsert for atomic operation
+      // Don't set created_at/updated_at - let database handle it
+      const { data, error } = await this.supabase
+        .from("ratings")
+        .upsert({
+          recipe_id: recipeId,
+          user_id: userId,
+          rating,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase upsert error:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          recipeId,
+          userId,
+          rating
+        });
+        
+        // Log additional context for debugging
+        console.error("Upsert context:", {
+          table: "ratings",
+          uniqueConstraint: "ratings_user_recipe_unique",
+          columns: ["user_id", "recipe_id"],
+          values: { user_id: userId, recipe_id: recipeId, rating }
+        });
+        
+        // Check if it's a unique constraint violation
+        if (error.code === "23505") {
+          console.error("Unique constraint violation detected. This might indicate a race condition or duplicate key.");
+        }
+        
+        // Check if it's a foreign key violation
+        if (error.code === "23503") {
+          console.error("Foreign key violation detected. This might indicate that the recipe or user doesn't exist.");
+        }
+        
+        // Check if it's a check constraint violation
+        if (error.code === "23514") {
+          console.error("Check constraint violation detected. This might indicate an invalid rating value.");
+        }
+        
+        // Check if it's a permission denied error
+        if (error.code === "42501") {
+          console.error("Permission denied. This might indicate an RLS policy issue.");
+        }
+        
+        // Check if it's a not null violation
+        if (error.code === "23502") {
+          console.error("Not null violation detected. This might indicate a missing required field.");
+        }
+        
+        throw error;
       }
 
-      // If update failed, create new rating
-      const createdRating = await this.createRating(recipeId, userId, rating);
-      if (!createdRating) {
-        throw new Error("Failed to create rating");
-      }
+      console.log("Upsert successful, data:", data);
 
-      return createdRating;
+      // Transform to UpsertRatingDto
+      return this.transformToUpsertRatingDto(data);
     } catch (error) {
       console.error("Error upserting rating:", error);
       throw error;
@@ -222,7 +270,7 @@ export class RatingService {
   private transformToUpsertRatingDto(rating: Rating): UpsertRatingDto {
     return {
       ...rating,
-      can_regenerate: rating.rating === -1, // Allow regeneration for negative ratings (-1 = down)
+      can_regenerate: rating.rating === "down", // Allow regeneration for negative ratings
     };
   }
 }

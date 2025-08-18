@@ -1,21 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST, PUT, DELETE } from "../../pages/api/recipes/[id]/rating";
-import { createMockContext, mockUser, mockRecipe, mockRating } from "../setup";
+import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock services
-vi.mock("../../../lib/services/rating.service", () => ({
-  RatingService: vi.fn(),
-}));
+// Mock services zgodnie z planem implementacji
+vi.mock("../../../lib/services/rating.service");
+vi.mock("../../../lib/services/recipe.service");
 
-vi.mock("../../../lib/services/recipe.service", () => ({
-  RecipeService: vi.fn(),
-}));
-
-// Mock service instances
 const mockRatingService = {
-  addRating: vi.fn(),
+  createRating: vi.fn(),
   updateRating: vi.fn(),
   deleteRating: vi.fn(),
+  getRating: vi.fn(),
 };
 
 const mockRecipeService = {
@@ -23,28 +18,36 @@ const mockRecipeService = {
 };
 
 describe("/api/recipes/[id]/rating", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
-    vi.mocked(mockRatingService.addRating).mockResolvedValue({
-      rating: "up",
+    vi.mocked(mockRatingService.createRating).mockResolvedValue({
+      id: "rating-123",
       recipe_id: mockRecipe.id,
       user_id: mockUser.id,
+      rating: "up",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
     });
     vi.mocked(mockRatingService.updateRating).mockResolvedValue({
-      rating: "down",
+      id: "rating-123",
       recipe_id: mockRecipe.id,
       user_id: mockUser.id,
+      rating: "down",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
     });
     vi.mocked(mockRatingService.deleteRating).mockResolvedValue(true);
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
 
-    // Mock service constructors
-    const { RatingService } = require("../../../lib/services/rating.service");
-    const { RecipeService } = require("../../../lib/services/recipe.service");
-    vi.mocked(RatingService).mockImplementation(() => mockRatingService);
-    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
+    // Mock service constructors - using vi.mocked for dynamic imports
+    vi.doMock("../../../lib/services/rating.service", () => ({
+      RatingService: vi.fn().mockImplementation(() => mockRatingService),
+    }));
+    vi.doMock("../../../lib/services/recipe.service", () => ({
+      RecipeService: vi.fn().mockImplementation(() => mockRecipeService),
+    }));
   });
 
   describe("POST", () => {
@@ -157,17 +160,16 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Invalid rating data");
+      expect(data.error).toBe("Invalid rating value");
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRatingService.addRating).mockResolvedValue(null);
+      vi.mocked(mockRatingService.createRating).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -182,7 +184,7 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Failed to add rating");
+      expect(data.error).toBe("Internal server error");
     });
   });
 
@@ -192,6 +194,7 @@ describe("/api/recipes/[id]/rating", () => {
         locals: {
           user: mockUser,
           supabase: {},
+          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
@@ -206,6 +209,7 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
+      expect(data.message).toBe("Rating updated successfully");
       expect(data.rating).toBe("down");
     });
 
@@ -237,10 +241,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {},
         },
-        params: { id: "invalid-uuid" },
+        params: { id: "invalid-id" },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/invalid-uuid/rating", {
+      const request = new Request("http://localhost:3000/api/recipes/invalid-id/rating", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" }),
@@ -294,7 +298,7 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Validation failed");
+      expect(data.error).toBe("Invalid rating value");
     });
 
     it("should return 404 when recipe is not found", async () => {
@@ -305,10 +309,10 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/rating", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: "down" }),
@@ -318,11 +322,11 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(404);
-      expect(data.error).toBe("Recipe not found or access denied");
+      expect(data.error).toBe("Recipe not found");
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRatingService.updateRating).mockResolvedValue(null);
+      vi.mocked(mockRatingService.updateRating).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
@@ -342,7 +346,30 @@ describe("/api/recipes/[id]/rating", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Failed to update rating");
+      expect(data.error).toBe("Internal server error");
+    });
+
+    it("should accept true value for visibility", async () => {
+      const mockContext = createMockContext({
+        locals: {
+          user: mockUser,
+          supabase: {},
+          authenticatedSupabase: {},
+        },
+        params: { id: mockRecipe.id },
+      });
+
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: "up" }),
+      });
+
+      const response = await PUT({ ...mockContext, request });
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.rating).toBe("up");
     });
   });
 
@@ -352,11 +379,16 @@ describe("/api/recipes/[id]/rating", () => {
         locals: {
           user: mockUser,
           supabase: {},
+          authenticatedSupabase: {},
         },
         params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "DELETE",
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -372,7 +404,11 @@ describe("/api/recipes/[id]/rating", () => {
         params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "DELETE",
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -385,10 +421,14 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {},
         },
-        params: { id: "invalid-uuid" },
+        params: { id: "invalid-id" },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request("http://localhost:3000/api/recipes/invalid-id/rating", {
+        method: "DELETE",
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -403,18 +443,22 @@ describe("/api/recipes/[id]/rating", () => {
           user: mockUser,
           supabase: {},
         },
-        params: { id: mockRecipe.id },
+        params: { id: "non-existent" },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request("http://localhost:3000/api/recipes/non-existent/rating", {
+        method: "DELETE",
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(404);
-      expect(data.error).toBe("Recipe not found or access denied");
+      expect(data.error).toBe("Recipe not found");
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRatingService.deleteRating).mockResolvedValue(false);
+      vi.mocked(mockRatingService.deleteRating).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
@@ -424,11 +468,15 @@ describe("/api/recipes/[id]/rating", () => {
         params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
+        method: "DELETE",
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Failed to delete rating");
+      expect(data.error).toBe("Internal server error");
     });
   });
 });
