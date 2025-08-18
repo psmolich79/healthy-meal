@@ -3,32 +3,24 @@
 // Mobile: bottom navigation, Desktop: topbar navigation
 ---
 
-<nav class="fixed bottom-0 left-0 right-0 z-50 md:bottom-auto md:top-0 bg-background border-t md:border-b md:border-t-0 border-border">
+<nav
+  class="fixed bottom-0 left-0 right-0 z-50 md:bottom-auto md:top-0 bg-background border-t md:border-b md:border-t-0 border-border"
+>
   <!-- Desktop Navigation (md and up) -->
   <div class="hidden md:block">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <div class="flex-shrink-0">
-          <a href="/" class="text-xl font-bold text-primary">
-            HealthyMeal
-          </a>
+          <a href="/" class="text-xl font-bold text-primary"> HealthyMeal </a>
         </div>
 
         <!-- Navigation Links -->
         <div class="hidden md:flex md:items-center md:space-x-8">
-          <a href="/recipes/generate" class="text-foreground hover:text-primary transition-colors">
-            Generuj przepis
-          </a>
-          <a href="/recipes" class="text-foreground hover:text-primary transition-colors">
-            Moje przepisy
-          </a>
-          <a href="/profile" class="text-foreground hover:text-primary transition-colors">
-            Profil
-          </a>
-          <a href="/ai-usage" class="text-foreground hover:text-primary transition-colors">
-            Statystyki AI
-          </a>
+          <a href="/recipes/generate" class="text-foreground hover:text-primary transition-colors"> Generuj przepis </a>
+          <a href="/recipes" class="text-foreground hover:text-primary transition-colors"> Moje przepisy </a>
+          <a href="/profile" class="text-foreground hover:text-primary transition-colors"> Profil </a>
+          <a href="/ai-usage" class="text-foreground hover:text-primary transition-colors"> Statystyki AI </a>
         </div>
 
         <!-- Theme Toggle and User Menu -->
@@ -39,7 +31,12 @@
             aria-label="Przełącz motyw"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              ></path>
             </svg>
           </button>
         </div>
@@ -50,23 +47,41 @@
   <!-- Mobile Navigation (bottom) -->
   <div class="md:hidden">
     <div class="flex justify-around items-center h-16 px-4">
-      <a href="/recipes/generate" class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors">
+      <a
+        href="/recipes/generate"
+        class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors"
+      >
         <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
         <span>Generuj</span>
       </a>
-      
-      <a href="/recipes" class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors">
+
+      <a
+        href="/recipes"
+        class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors"
+      >
         <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
         </svg>
         <span>Przepisy</span>
       </a>
-      
-      <a href="/profile" class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors">
+
+      <a
+        href="/profile"
+        class="flex flex-col items-center text-xs text-foreground hover:text-primary transition-colors"
+      >
         <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
         </svg>
         <span>Profil</span>
       </a>
@@ -82,44 +97,44 @@
 
 <script>
   // Theme toggle functionality
-  const themeToggle = document.getElementById('theme-toggle');
+  const themeToggle = document.getElementById("theme-toggle");
   const html = document.documentElement;
-  
+
   // Get saved theme from localStorage
-  const savedTheme = localStorage.getItem('theme') || 'system';
-  
+  const savedTheme = localStorage.getItem("theme") || "system";
+
   // Apply theme
   function applyTheme(theme: string) {
-    if (theme === 'dark') {
-      html.classList.add('dark');
-    } else if (theme === 'light') {
-      html.classList.remove('dark');
+    if (theme === "dark") {
+      html.classList.add("dark");
+    } else if (theme === "light") {
+      html.classList.remove("dark");
     } else {
       // System theme
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        html.classList.add('dark');
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        html.classList.add("dark");
       } else {
-        html.classList.remove('dark');
+        html.classList.remove("dark");
       }
     }
   }
-  
+
   // Initialize theme
   applyTheme(savedTheme);
-  
+
   // Theme toggle click handler
-  themeToggle?.addEventListener('click', () => {
-    const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    localStorage.setItem('theme', newTheme);
+  themeToggle?.addEventListener("click", () => {
+    const currentTheme = html.classList.contains("dark") ? "dark" : "light";
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+    localStorage.setItem("theme", newTheme);
     applyTheme(newTheme);
   });
-  
+
   // Listen for system theme changes
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    if (localStorage.getItem('theme') === 'system') {
-      applyTheme('system');
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    if (localStorage.getItem("theme") === "system") {
+      applyTheme("system");
     }
   });
 </script>
