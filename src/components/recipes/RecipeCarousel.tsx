@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Star } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { RecipeCarouselProps } from './types';
-import type { RecipeListItemDto } from '@/types';
+import React, { useState, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight, Calendar, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { RecipeCarouselProps } from "./types";
+import type { RecipeListItemDto } from "@/types";
 
 const RecipeCard: React.FC<{
   recipe: RecipeListItemDto;
@@ -12,49 +12,41 @@ const RecipeCard: React.FC<{
 }> = ({ recipe, onClick }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('pl-PL', {
-      day: 'numeric',
-      month: 'short'
+    return date.toLocaleDateString("pl-PL", {
+      day: "numeric",
+      month: "short",
     });
   };
 
-  const truncateTitle = (title: string, maxLength: number = 50) => {
+  const truncateTitle = (title: string, maxLength = 50) => {
     return title.length > maxLength ? `${title.slice(0, maxLength)}...` : title;
   };
 
   return (
-    <Card 
+    <Card
       className="cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 min-w-[280px] max-w-[280px]"
       onClick={onClick}
     >
       <CardContent className="p-4 space-y-3">
         <div className="space-y-2">
-          <h3 className="font-medium text-sm leading-tight">
-            {truncateTitle(recipe.title)}
-          </h3>
-          
+          <h3 className="font-medium text-sm leading-tight">{truncateTitle(recipe.title)}</h3>
+
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center space-x-1">
               <Calendar className="h-3 w-3" />
               <span>{formatDate(recipe.created_at)}</span>
             </div>
-            
+
             {recipe.user_rating && (
-              <Badge 
-                variant={recipe.user_rating === 'up' ? 'default' : 'secondary'}
-                className="text-xs px-1 py-0"
-              >
-                {recipe.user_rating === 'up' ? '👍' : '👎'}
+              <Badge variant={recipe.user_rating === "up" ? "default" : "secondary"} className="text-xs px-1 py-0">
+                {recipe.user_rating === "up" ? "👍" : "👎"}
               </Badge>
             )}
           </div>
 
           <div className="flex items-center justify-between">
-            <Badge 
-              variant={recipe.is_visible ? 'outline' : 'secondary'}
-              className="text-xs"
-            >
-              {recipe.is_visible ? 'Publiczny' : 'Prywatny'}
+            <Badge variant={recipe.is_visible ? "outline" : "secondary"} className="text-xs">
+              {recipe.is_visible ? "Publiczny" : "Prywatny"}
             </Badge>
           </div>
         </div>
@@ -70,9 +62,7 @@ const EmptyCarousel: React.FC<{ onGenerateClick: () => void }> = ({ onGenerateCl
     </div>
     <div className="space-y-2">
       <h3 className="font-medium">Brak ostatnich przepisów</h3>
-      <p className="text-sm text-muted-foreground">
-        Wygeneruj swój pierwszy przepis, aby zobaczyć go tutaj
-      </p>
+      <p className="text-sm text-muted-foreground">Wygeneruj swój pierwszy przepis, aby zobaczyć go tutaj</p>
     </div>
     <Button onClick={onGenerateClick} variant="outline" size="sm">
       Wygeneruj przepis
@@ -84,7 +74,7 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
   recipes,
   onRecipeClick,
   maxVisible = 3,
-  className = ''
+  className = "",
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -97,7 +87,7 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
     if (!isAutoPlaying || !canNavigate) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % Math.max(1, recipes.length - maxVisible + 1));
+      setCurrentIndex((prev) => (prev + 1) % Math.max(1, recipes.length - maxVisible + 1));
     }, 3000);
 
     return () => clearInterval(interval);
@@ -105,25 +95,24 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
 
   const handlePrevious = useCallback(() => {
     setIsAutoPlaying(false);
-    setCurrentIndex(prev => 
-      prev === 0 ? Math.max(0, recipes.length - maxVisible) : prev - 1
-    );
+    setCurrentIndex((prev) => (prev === 0 ? Math.max(0, recipes.length - maxVisible) : prev - 1));
   }, [recipes.length, maxVisible]);
 
   const handleNext = useCallback(() => {
     setIsAutoPlaying(false);
-    setCurrentIndex(prev => 
-      prev >= recipes.length - maxVisible ? 0 : prev + 1
-    );
+    setCurrentIndex((prev) => (prev >= recipes.length - maxVisible ? 0 : prev + 1));
   }, [recipes.length, maxVisible]);
 
-  const handleRecipeClick = useCallback((recipeId: string) => {
-    onRecipeClick(recipeId);
-  }, [onRecipeClick]);
+  const handleRecipeClick = useCallback(
+    (recipeId: string) => {
+      onRecipeClick(recipeId);
+    },
+    [onRecipeClick]
+  );
 
   const handleGenerateClick = useCallback(() => {
     // This will be handled by parent component
-    window.location.href = '/recipes/generate';
+    window.location.href = "/recipes/generate";
   }, []);
 
   const visibleRecipes = recipes.slice(currentIndex, currentIndex + maxVisible);
@@ -170,17 +159,13 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
           </div>
 
           {/* Carousel */}
-          <div 
+          <div
             className="flex space-x-4 overflow-hidden"
             onMouseEnter={() => setIsAutoPlaying(false)}
             onMouseLeave={() => setIsAutoPlaying(true)}
           >
             {visibleRecipes.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onClick={() => handleRecipeClick(recipe.id)}
-              />
+              <RecipeCard key={recipe.id} recipe={recipe} onClick={() => handleRecipeClick(recipe.id)} />
             ))}
           </div>
 
@@ -195,9 +180,7 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
                     setCurrentIndex(index * maxVisible);
                   }}
                   className={`h-2 w-2 rounded-full transition-all ${
-                    Math.floor(currentIndex / maxVisible) === index
-                      ? 'bg-primary'
-                      : 'bg-muted-foreground/30'
+                    Math.floor(currentIndex / maxVisible) === index ? "bg-primary" : "bg-muted-foreground/30"
                   }`}
                   aria-label={`Przejdź do strony ${index + 1}`}
                 />
@@ -207,12 +190,7 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
 
           {/* Footer */}
           <div className="text-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.location.href = '/recipes'}
-              className="text-xs"
-            >
+            <Button variant="ghost" size="sm" onClick={() => (window.location.href = "/recipes")} className="text-xs">
               Zobacz wszystkie przepisy
             </Button>
           </div>

@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { 
-  Recipe, 
-  Profile, 
-  AiGenerationLog, 
+import type {
+  Recipe,
+  Profile,
+  AiGenerationLog,
   Rating,
   GeneratedRecipeDto,
   RecipeDetailsDto,
@@ -10,16 +10,16 @@ import type {
   UpdatedRecipeVisibilityDto,
   RecipeListItemDto,
   PaginatedRecipesDto,
-  PaginationDto
+  PaginationDto,
 } from "../../types";
 
 /**
  * Service for managing recipe operations.
- * 
+ *
  * This service provides a clean interface for all recipe-related database operations,
  * including recipe generation, retrieval, visibility updates, and regeneration.
  * It handles error cases gracefully and provides detailed logging for debugging.
- * 
+ *
  * @example
  * ```typescript
  * const recipeService = new RecipeService(supabaseClient);
@@ -65,7 +65,7 @@ export class RecipeService {
         shopping_list: data.content?.shopping_list || [],
         instructions: data.content?.instructions || [],
         is_saved: isSaved,
-        user_rating: userRating?.rating || null
+        user_rating: userRating?.rating || null,
       };
 
       return recipeDetailsDto;
@@ -113,16 +113,16 @@ export class RecipeService {
    * @returns Promise resolving to the updated recipe data or null if update failed
    */
   async updateVisibility(
-    recipeId: string, 
-    userId: string, 
+    recipeId: string,
+    userId: string,
     isVisible: boolean
   ): Promise<UpdatedRecipeVisibilityDto | null> {
     try {
       const { data, error } = await this.supabase
         .from("recipes")
-        .update({ 
+        .update({
           is_visible: isVisible,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("id", recipeId)
         .eq("user_id", userId)
@@ -155,20 +155,17 @@ export class RecipeService {
    */
   async getRecipes(
     userId: string,
-    page: number = 1,
-    limit: number = 10,
-    visibleOnly: boolean = false,
-    sort: string = "created_at.desc"
+    page = 1,
+    limit = 10,
+    visibleOnly = false,
+    sort = "created_at.desc"
   ): Promise<PaginatedRecipesDto> {
     try {
       // Calculate offset
       const offset = (page - 1) * limit;
 
       // Build query
-      let query = this.supabase
-        .from("recipes")
-        .select("id, title, created_at, is_visible")
-        .eq("user_id", userId);
+      let query = this.supabase.from("recipes").select("id, title, created_at, is_visible").eq("user_id", userId);
 
       // Apply visibility filter
       if (visibleOnly) {
@@ -176,10 +173,7 @@ export class RecipeService {
       }
 
       // Get total count with proper filtering
-      let countQuery = this.supabase
-        .from("recipes")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId);
+      let countQuery = this.supabase.from("recipes").select("*", { count: "exact", head: true }).eq("user_id", userId);
 
       if (visibleOnly) {
         countQuery = countQuery.eq("is_visible", true);
@@ -193,23 +187,23 @@ export class RecipeService {
 
       // Convert sort parameter to database column format and direction
       let sortColumn: string;
-      let sortDirection: 'asc' | 'desc';
-      
-      if (sort.includes('created_at')) {
-        sortColumn = 'created_at';
-        sortDirection = sort.includes('desc') ? 'desc' : 'asc';
-      } else if (sort.includes('title')) {
-        sortColumn = 'title';
-        sortDirection = sort.includes('desc') ? 'desc' : 'asc';
+      let sortDirection: "asc" | "desc";
+
+      if (sort.includes("created_at")) {
+        sortColumn = "created_at";
+        sortDirection = sort.includes("desc") ? "desc" : "asc";
+      } else if (sort.includes("title")) {
+        sortColumn = "title";
+        sortDirection = sort.includes("desc") ? "desc" : "asc";
       } else {
         // Default sorting
-        sortColumn = 'created_at';
-        sortDirection = 'desc';
+        sortColumn = "created_at";
+        sortDirection = "desc";
       }
-      
+
       // Get recipes with pagination and sorting
       const { data: recipes, error } = await query
-        .order(sortColumn, { ascending: sortDirection === 'asc' })
+        .order(sortColumn, { ascending: sortDirection === "asc" })
         .range(offset, offset + limit - 1);
 
       if (error) {
@@ -217,36 +211,24 @@ export class RecipeService {
       }
 
       // Get user ratings and saved status for all recipes
-      const recipeIds = recipes.map(r => r.id);
+      const recipeIds = recipes.map((r) => r.id);
       const [ratingsResult, savedResult] = await Promise.all([
-        this.supabase
-          .from("ratings")
-          .select("recipe_id, rating")
-          .eq("user_id", userId)
-          .in("recipe_id", recipeIds),
-        this.supabase
-          .from("saved_recipes")
-          .select("recipe_id")
-          .eq("user_id", userId)
-          .in("recipe_id", recipeIds)
+        this.supabase.from("ratings").select("recipe_id, rating").eq("user_id", userId).in("recipe_id", recipeIds),
+        this.supabase.from("saved_recipes").select("recipe_id").eq("user_id", userId).in("recipe_id", recipeIds),
       ]);
 
       // Create rating and saved lookup maps
-      const ratingMap = new Map(
-        ratingsResult.data?.map(r => [r.recipe_id, r.rating]) || []
-      );
-      const savedMap = new Set(
-        savedResult.data?.map(r => r.recipe_id) || []
-      );
+      const ratingMap = new Map(ratingsResult.data?.map((r) => [r.recipe_id, r.rating]) || []);
+      const savedMap = new Set(savedResult.data?.map((r) => r.recipe_id) || []);
 
       // Transform to RecipeListItemDto
-      const recipeListItems: RecipeListItemDto[] = recipes.map(recipe => ({
+      const recipeListItems: RecipeListItemDto[] = recipes.map((recipe) => ({
         id: recipe.id,
         title: recipe.title,
         created_at: recipe.created_at,
         is_visible: recipe.is_visible,
         user_rating: ratingMap.get(recipe.id) || null,
-        is_saved: savedMap.has(recipe.id)
+        is_saved: savedMap.has(recipe.id),
       }));
 
       // Calculate pagination metadata
@@ -259,12 +241,12 @@ export class RecipeService {
         total,
         total_pages: totalPages,
         has_next: page < totalPages,
-        has_previous: page > 1
+        has_previous: page > 1,
       };
 
       return {
         recipes: recipeListItems,
-        pagination
+        pagination,
       };
     } catch (error) {
       console.error("Error retrieving recipes:", error);
@@ -279,11 +261,7 @@ export class RecipeService {
    */
   async getUserProfile(userId: string): Promise<Profile | null> {
     try {
-      const { data, error } = await this.supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      const { data, error } = await this.supabase.from("profiles").select("*").eq("user_id", userId).single();
 
       if (error) {
         if (error.code === "PGRST116") {
@@ -315,12 +293,10 @@ export class RecipeService {
         return true; // Already saved, consider it successful
       }
 
-      const { error } = await this.supabase
-        .from("saved_recipes")
-        .insert({
-          user_id: userId,
-          recipe_id: recipeId
-        });
+      const { error } = await this.supabase.from("saved_recipes").insert({
+        user_id: userId,
+        recipe_id: recipeId,
+      });
 
       if (error) {
         console.error("Error saving recipe:", error);

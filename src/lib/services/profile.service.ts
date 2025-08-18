@@ -3,11 +3,11 @@ import type { Profile, ProfileDto, UpdatedProfileDto, DeletedProfileDto } from "
 
 /**
  * Service for managing user profile operations.
- * 
+ *
  * This service provides a clean interface for all profile-related database operations,
  * including profile retrieval, preference updates, and deletion scheduling.
  * It handles error cases gracefully and provides detailed logging for debugging.
- * 
+ *
  * @example
  * ```typescript
  * const profileService = new ProfileService(supabaseClient);
@@ -24,11 +24,7 @@ export class ProfileService {
    */
   async getProfile(userId: string): Promise<Profile | null> {
     try {
-      const { data, error } = await this.supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      const { data, error } = await this.supabase.from("profiles").select("*").eq("user_id", userId).single();
 
       if (error) {
         if (error.code === "PGRST116") {
@@ -58,7 +54,7 @@ export class ProfileService {
         .insert({
           user_id: userId,
           preferences,
-          status: 'active'
+          status: "active",
         })
         .select("*")
         .single();
@@ -84,9 +80,9 @@ export class ProfileService {
     try {
       const { data, error } = await this.supabase
         .from("profiles")
-        .update({ 
+        .update({
           preferences,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId)
         .select("user_id, preferences, status, updated_at")
@@ -116,10 +112,10 @@ export class ProfileService {
     try {
       const { data, error } = await this.supabase
         .from("profiles")
-        .update({ 
+        .update({
           status: "pending_deletion",
           status_changed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId)
         .select("*")

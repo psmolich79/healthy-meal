@@ -1,7 +1,7 @@
-import React from 'react';
-import { Utensils } from 'lucide-react';
-import { AnimatedPreferenceCard } from './AnimatedPreferenceCard';
-import { CUISINE_PREFERENCES, getCategoryLabel, getCategoryDescription } from '@/data/preferences';
+import React from "react";
+import { Utensils } from "lucide-react";
+import { AnimatedPreferenceCard } from "./AnimatedPreferenceCard";
+import { CUISINE_PREFERENCES, getCategoryLabel, getCategoryDescription } from "@/data/preferences";
 
 interface CuisineSectionProps {
   preferences: string[];
@@ -14,25 +14,25 @@ export const CuisineSection: React.FC<CuisineSectionProps> = ({
   preferences,
   onChange,
   isExpanded,
-  disabled = false
+  disabled = false,
 }) => {
   const handleToggle = (preferenceId: string) => {
     if (disabled) return;
 
     const newPreferences = [...preferences];
     const index = newPreferences.indexOf(preferenceId);
-    
+
     if (index === -1) {
       newPreferences.push(preferenceId);
     } else {
       newPreferences.splice(index, 1);
     }
-    
+
     onChange(newPreferences);
   };
 
-  const selectedCuisinePreferences = preferences.filter(pref => 
-    CUISINE_PREFERENCES.some(cuisine => cuisine.id === pref)
+  const selectedCuisinePreferences = preferences.filter((pref) =>
+    CUISINE_PREFERENCES.some((cuisine) => cuisine.id === pref)
   );
 
   if (!isExpanded) return null;
@@ -43,18 +43,14 @@ export const CuisineSection: React.FC<CuisineSectionProps> = ({
       <div className="flex items-center space-x-3 pb-2">
         <Utensils className="h-5 w-5 text-secondary" />
         <div className="space-y-1">
-          <h3 className="font-semibold">{getCategoryLabel('cuisine')}</h3>
-          <p className="text-sm text-muted-foreground">
-            {getCategoryDescription('cuisine')}
-          </p>
+          <h3 className="font-semibold">{getCategoryLabel("cuisine")}</h3>
+          <p className="text-sm text-muted-foreground">{getCategoryDescription("cuisine")}</p>
         </div>
       </div>
 
       {/* Selected Count */}
       {selectedCuisinePreferences.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Wybrano: {selectedCuisinePreferences.length}
-        </div>
+        <div className="text-sm text-muted-foreground">Wybrano: {selectedCuisinePreferences.length}</div>
       )}
 
       {/* Preferences Grid */}
@@ -73,8 +69,8 @@ export const CuisineSection: React.FC<CuisineSectionProps> = ({
       {/* Help Text */}
       <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
         <p>
-          🌍 <strong>Wskazówka:</strong> Wybierz kuchnie świata, które najbardziej Ci smakują. 
-          Możesz wybrać kilka różnych stylów kulinarnych.
+          🌍 <strong>Wskazówka:</strong> Wybierz kuchnie świata, które najbardziej Ci smakują. Możesz wybrać kilka
+          różnych stylów kulinarnych.
         </p>
       </div>
     </div>

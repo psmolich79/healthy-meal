@@ -1,43 +1,50 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-const title = 'HealthyMeal - Spersonalizowane przepisy z AI';
-const description = 'Generuj spersonalizowane przepisy kulinarne z wykorzystaniem sztucznej inteligencji. Uwzględniamy Twoje preferencje żywieniowe i ograniczenia dietetyczne.';
+import Layout from "@/layouts/Layout.astro";
+const title = "HealthyMeal - Spersonalizowane przepisy z AI";
+const description =
+  "Generuj spersonalizowane przepisy kulinarne z wykorzystaniem sztucznej inteligencji. Uwzględniamy Twoje preferencje żywieniowe i ograniczenia dietetyczne.";
 ---
 
 <Layout title={title} description={description}>
-  <main class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+  <main
+    class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4"
+  >
     <div class="max-w-4xl mx-auto text-center space-y-8">
       <div class="space-y-4">
-        <h1 class="text-4xl md:text-6xl font-bold text-slate-900 dark:text-slate-100">
-          🍳 HealthyMeal
-        </h1>
+        <h1 class="text-4xl md:text-6xl font-bold text-slate-900 dark:text-slate-100">🍳 HealthyMeal</h1>
         <p class="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Spersonalizowane przepisy kulinarne z wykorzystaniem sztucznej inteligencji
         </p>
       </div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h2 class="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">🎯 Dla nowych użytkowników</h2>
           <p class="text-slate-600 dark:text-slate-400 mb-6">
             Zarejestruj się i ustaw swoje preferencje żywieniowe, aby otrzymywać spersonalizowane przepisy.
           </p>
-          <a href="/register" class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+          <a
+            href="/register"
+            class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
             Zarejestruj się
           </a>
         </div>
-        
+
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
           <h2 class="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">👋 Masz już konto?</h2>
           <p class="text-slate-600 dark:text-slate-400 mb-6">
             Zaloguj się, aby kontynuować generowanie przepisów i zarządzanie swoją kolekcją.
           </p>
-          <a href="/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+          <a
+            href="/login"
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
             Zaloguj się
           </a>
         </div>
       </div>
-      
+
       <div class="mt-12 text-center">
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">✨ Co oferujemy?</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600 dark:text-slate-400">

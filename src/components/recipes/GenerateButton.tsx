@@ -1,14 +1,14 @@
-import React from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import type { GenerateButtonProps } from './types';
+import React from "react";
+import { Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { GenerateButtonProps } from "./types";
 
 export const GenerateButton: React.FC<GenerateButtonProps> = ({
   onClick,
   disabled,
   isLoading,
   children,
-  variant = 'primary'
+  variant = "primary",
 }) => {
   const handleClick = () => {
     if (!disabled && !isLoading) {
@@ -24,14 +24,15 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
       size="lg"
       className={`
         relative min-w-[200px] font-semibold transition-all duration-200
-        ${variant === 'primary' 
-          ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+        ${
+          variant === "primary"
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+            : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
         }
-        ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}
+        ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}
         disabled:opacity-50 disabled:cursor-not-allowed
       `}
-      aria-label={isLoading ? 'Generowanie przepisu w toku...' : 'Wygeneruj przepis'}
+      aria-label={isLoading ? "Generowanie przepisu w toku..." : "Wygeneruj przepis"}
     >
       <div className="flex items-center justify-center space-x-2">
         {isLoading ? (

@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { Component } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -18,26 +18,26 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     super(props);
     this.state = {
       hasError: false,
-      error: null
+      error: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error) {
     this.setState({
       hasError: true,
-      error
+      error,
     });
 
     // Log error to console in development
     if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught an error:', error);
+      console.error("ErrorBoundary caught an error:", error);
     }
 
     // Call custom error handler if provided
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   handleRetry = () => {
     this.setState({
       hasError: false,
-      error: null
+      error: null,
     });
   };
 
@@ -58,14 +58,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     const errorData = {
       message: this.state.error?.message,
       stack: this.state.error?.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    console.log('Error report:', errorData);
-    
+    console.log("Error report:", errorData);
+
     // You could send this to a service like Sentry, LogRocket, etc.
     // For now, we'll just show an alert
-    alert('Błąd został zgłoszony. Dziękujemy za pomoc w poprawie aplikacji!');
+    alert("Błąd został zgłoszony. Dziękujemy za pomoc w poprawie aplikacji!");
   };
 
   render() {
@@ -96,15 +96,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
                   />
                 </svg>
               </div>
-              <CardTitle className="text-xl text-red-600 dark:text-red-400">
-                Wystąpił nieoczekiwany błąd
-              </CardTitle>
+              <CardTitle className="text-xl text-red-600 dark:text-red-400">Wystąpił nieoczekiwany błąd</CardTitle>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400 text-center">
-                Przepraszamy, wystąpił błąd podczas ładowania profilu. 
-                Spróbuj odświeżyć stronę lub skontaktuj się z pomocą techniczną.
+                Przepraszamy, wystąpił błąd podczas ładowania profilu. Spróbuj odświeżyć stronę lub skontaktuj się z
+                pomocą techniczną.
               </p>
 
               {import.meta.env.DEV && this.state.error && (
@@ -113,34 +111,24 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
                     Szczegóły błędu (tylko w trybie deweloperskim)
                   </summary>
                   <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-left">
-                    <p className="font-mono text-red-600 dark:text-red-400 break-words">
-                      {this.state.error.message}
-                    </p>
+                    <p className="font-mono text-red-600 dark:text-red-400 break-words">{this.state.error.message}</p>
                   </div>
                 </details>
               )}
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={this.handleRetry}
-                  className="flex-1"
-                  variant="default"
-                >
+                <Button onClick={this.handleRetry} className="flex-1" variant="default">
                   Spróbuj ponownie
                 </Button>
-                
-                <Button
-                  onClick={this.handleReportError}
-                  className="flex-1"
-                  variant="outline"
-                >
+
+                <Button onClick={this.handleReportError} className="flex-1" variant="outline">
                   Zgłoś błąd
                 </Button>
               </div>
 
               <div className="text-center">
                 <Button
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => (window.location.href = "/")}
                   variant="ghost"
                   size="sm"
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"

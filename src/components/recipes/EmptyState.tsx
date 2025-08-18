@@ -1,7 +1,7 @@
-import React from 'react';
-import { ChefHat, Plus, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { ChefHat, Plus, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface EmptyStateProps {
   message: string;
@@ -16,10 +16,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
   isSearchResult = false,
-  className = ''
+  className = "",
 }) => {
   const handleGenerateClick = () => {
-    window.location.href = '/recipes/generate';
+    window.location.href = "/recipes/generate";
   };
 
   const getIcon = () => {
@@ -32,13 +32,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const getDefaultAction = () => {
     if (isSearchResult) {
       return {
-        label: 'Wyczyść wyszukiwanie',
-        action: onAction
+        label: "Wyczyść wyszukiwanie",
+        action: onAction,
       };
     }
     return {
-      label: 'Wygeneruj pierwszy przepis',
-      action: handleGenerateClick
+      label: "Wygeneruj pierwszy przepis",
+      action: handleGenerateClick,
     };
   };
 
@@ -50,19 +50,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     <Card className={className}>
       <CardContent className="p-12 text-center space-y-6">
         {/* Icon */}
-        <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-          {getIcon()}
-        </div>
+        <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center">{getIcon()}</div>
 
         {/* Content */}
         <div className="space-y-4 max-w-md mx-auto">
-          <h3 className="text-xl font-semibold">
-            {isSearchResult ? 'Nie znaleziono przepisów' : 'Brak przepisów'}
-          </h3>
-          
-          <p className="text-muted-foreground leading-relaxed">
-            {message}
-          </p>
+          <h3 className="text-xl font-semibold">{isSearchResult ? "Nie znaleziono przepisów" : "Brak przepisów"}</h3>
+
+          <p className="text-muted-foreground leading-relaxed">{message}</p>
 
           {/* Action Button */}
           {finalAction && (
@@ -91,7 +85,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 <p>Oceń i zapisuj najlepsze przepisy</p>
               </div>
             </div>
-            
+
             <div className="mt-4 pt-4 border-t">
               <p className="text-xs text-muted-foreground">
                 💡 Wszystkie przepisy są generowane przez AI na podstawie Twoich preferencji

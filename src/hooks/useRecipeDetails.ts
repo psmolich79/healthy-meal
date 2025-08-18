@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { supabaseClient } from '@/db/supabase.client';
-import type { RecipeDetailsDto, UpsertRatingCommand, RatingType, RegeneratedRecipeDto } from '@/types';
+import { useState, useCallback, useEffect } from "react";
+import { supabaseClient } from "@/db/supabase.client";
+import type { RecipeDetailsDto, UpsertRatingCommand, RatingType, RegeneratedRecipeDto } from "@/types";
 
 interface RecipeDetailsState {
   recipe: RecipeDetailsDto | null;
@@ -9,7 +9,7 @@ interface RecipeDetailsState {
   isRating: boolean;
   isRegenerating: boolean;
   error: string | null;
-  saveStatus: 'unsaved' | 'saving' | 'saved' | 'error';
+  saveStatus: "unsaved" | "saving" | "saved" | "error";
 }
 
 export const useRecipeDetails = (recipeId: string) => {
@@ -20,7 +20,7 @@ export const useRecipeDetails = (recipeId: string) => {
     isRating: false,
     isRegenerating: false,
     error: null,
-    saveStatus: 'unsaved'
+    saveStatus: "unsaved",
   });
 
   // Fetch recipe details
@@ -28,35 +28,38 @@ export const useRecipeDetails = (recipeId: string) => {
     if (!recipeId) return;
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
       if (sessionError || !session) {
-        throw new Error('Musisz być zalogowany, aby wyświetlić przepis');
+        throw new Error("Musisz być zalogowany, aby wyświetlić przepis");
       }
 
       const response = await fetch(`/api/recipes/${recipeId}`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
-        let errorMessage = 'Błąd podczas ładowania przepisu';
+        let errorMessage = "Błąd podczas ładowania przepisu";
 
         switch (response.status) {
           case 401:
-            errorMessage = 'Musisz być zalogowany, aby wyświetlić przepis';
+            errorMessage = "Musisz być zalogowany, aby wyświetlić przepis";
             break;
           case 403:
-            errorMessage = 'Nie masz uprawnień do przeglądania tego przepisu';
+            errorMessage = "Nie masz uprawnień do przeglądania tego przepisu";
             break;
           case 404:
-            errorMessage = 'Przepis nie został znaleziony';
+            errorMessage = "Przepis nie został znaleziony";
             break;
           case 500:
-            errorMessage = 'Błąd serwera. Spróbuj ponownie później';
+            errorMessage = "Błąd serwera. Spróbuj ponownie później";
             break;
         }
 
@@ -65,18 +68,18 @@ export const useRecipeDetails = (recipeId: string) => {
 
       const recipe: RecipeDetailsDto = await response.json();
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         recipe,
-        saveStatus: recipe.is_saved ? 'saved' : 'unsaved'
+        saveStatus: recipe.is_saved ? "saved" : "unsaved",
       }));
     } catch (error) {
-      console.error('Error fetching recipe:', error);
-      setState(prev => ({
+      console.error("Error fetching recipe:", error);
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Błąd podczas ładowania przepisu'
+        error: error instanceof Error ? error.message : "Błąd podczas ładowania przepisu",
       }));
     }
   }, [recipeId]);
@@ -86,155 +89,167 @@ export const useRecipeDetails = (recipeId: string) => {
     if (!state.recipe) return false;
 
     try {
-      setState(prev => ({ ...prev, isSaving: true, error: null, saveStatus: 'saving' }));
+      setState((prev) => ({ ...prev, isSaving: true, error: null, saveStatus: "saving" }));
 
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
       if (sessionError || !session) {
-        throw new Error('Musisz być zalogowany, aby zapisać przepis');
+        throw new Error("Musisz być zalogowany, aby zapisać przepis");
       }
 
       // Determine if we're saving or unsaving based on current state
       const isCurrentlySaved = state.recipe.is_saved;
       const endpoint = `/api/recipes/${recipeId}/save`;
-      const method = isCurrentlySaved ? 'DELETE' : 'POST';
+      const method = isCurrentlySaved ? "DELETE" : "POST";
 
-      console.log(`Saving recipe: ${isCurrentlySaved ? 'DELETE' : 'POST'} ${endpoint}`);
+      console.log(`Saving recipe: ${isCurrentlySaved ? "DELETE" : "POST"} ${endpoint}`);
 
       const response = await fetch(endpoint, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Save response error:', response.status, errorData);
-        throw new Error('Błąd podczas zapisywania przepisu');
+        console.error("Save response error:", response.status, errorData);
+        throw new Error("Błąd podczas zapisywania przepisu");
       }
 
       // Toggle the saved state
       const newSavedState = !isCurrentlySaved;
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         isSaving: false,
-        saveStatus: newSavedState ? 'saved' : 'unsaved',
-        recipe: prev.recipe ? { ...prev.recipe, is_saved: newSavedState } : null
+        saveStatus: newSavedState ? "saved" : "unsaved",
+        recipe: prev.recipe ? { ...prev.recipe, is_saved: newSavedState } : null,
       }));
 
-      console.log(`Recipe ${isCurrentlySaved ? 'unsaved' : 'saved'} successfully`);
+      console.log(`Recipe ${isCurrentlySaved ? "unsaved" : "saved"} successfully`);
 
       return true;
     } catch (error) {
-      console.error('Error saving recipe:', error);
-      setState(prev => ({
+      console.error("Error saving recipe:", error);
+      setState((prev) => ({
         ...prev,
         isSaving: false,
-        saveStatus: 'error',
-        error: error instanceof Error ? error.message : 'Błąd podczas zapisywania'
+        saveStatus: "error",
+        error: error instanceof Error ? error.message : "Błąd podczas zapisywania",
       }));
       return false;
     }
   }, [state.recipe, recipeId]);
 
   // Rate recipe
-  const rateRecipe = useCallback(async (rating: RatingType) => {
-    if (!state.recipe) return false;
+  const rateRecipe = useCallback(
+    async (rating: RatingType) => {
+      if (!state.recipe) return false;
 
-    try {
-      setState(prev => ({ ...prev, isRating: true, error: null }));
+      try {
+        setState((prev) => ({ ...prev, isRating: true, error: null }));
 
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Musisz być zalogowany, aby ocenić przepis');
-      }
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabaseClient.auth.getSession();
 
-      const command: UpsertRatingCommand = { rating };
-
-      const response = await fetch(`/api/recipes/${recipeId}/rating`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(command)
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Błąd podczas oceniania przepisu';
-
-        switch (response.status) {
-          case 401:
-            errorMessage = 'Musisz być zalogowany, aby ocenić przepis';
-            break;
-          case 403:
-            errorMessage = 'Nie możesz ocenić tego przepisu';
-            break;
-          case 500:
-            errorMessage = 'Błąd serwera. Spróbuj ponownie później';
-            break;
+        if (sessionError || !session) {
+          throw new Error("Musisz być zalogowany, aby ocenić przepis");
         }
 
-        throw new Error(errorMessage);
+        const command: UpsertRatingCommand = { rating };
+
+        const response = await fetch(`/api/recipes/${recipeId}/rating`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(command),
+        });
+
+        if (!response.ok) {
+          let errorMessage = "Błąd podczas oceniania przepisu";
+
+          switch (response.status) {
+            case 401:
+              errorMessage = "Musisz być zalogowany, aby ocenić przepis";
+              break;
+            case 403:
+              errorMessage = "Nie możesz ocenić tego przepisu";
+              break;
+            case 500:
+              errorMessage = "Błąd serwera. Spróbuj ponownie później";
+              break;
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        setState((prev) => ({
+          ...prev,
+          isRating: false,
+          recipe: prev.recipe ? { ...prev.recipe, user_rating: rating } : null,
+        }));
+
+        return true;
+      } catch (error) {
+        console.error("Error rating recipe:", error);
+        setState((prev) => ({
+          ...prev,
+          isRating: false,
+          error: error instanceof Error ? error.message : "Błąd podczas oceniania",
+        }));
+        return false;
       }
-
-      setState(prev => ({
-        ...prev,
-        isRating: false,
-        recipe: prev.recipe ? { ...prev.recipe, user_rating: rating } : null
-      }));
-
-      return true;
-    } catch (error) {
-      console.error('Error rating recipe:', error);
-      setState(prev => ({
-        ...prev,
-        isRating: false,
-        error: error instanceof Error ? error.message : 'Błąd podczas oceniania'
-      }));
-      return false;
-    }
-  }, [state.recipe, recipeId]);
+    },
+    [state.recipe, recipeId]
+  );
 
   // Regenerate recipe
   const regenerateRecipe = useCallback(async () => {
     if (!state.recipe) return null;
 
     try {
-      setState(prev => ({ ...prev, isRegenerating: true, error: null }));
+      setState((prev) => ({ ...prev, isRegenerating: true, error: null }));
 
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabaseClient.auth.getSession();
+
       if (sessionError || !session) {
-        throw new Error('Musisz być zalogowany, aby wygenerować ponownie przepis');
+        throw new Error("Musisz być zalogowany, aby wygenerować ponownie przepis");
       }
 
       const response = await fetch(`/api/recipes/${recipeId}/regenerate`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
-        let errorMessage = 'Błąd podczas regeneracji przepisu';
+        let errorMessage = "Błąd podczas regeneracji przepisu";
 
         switch (response.status) {
           case 401:
-            errorMessage = 'Musisz być zalogowany, aby wygenerować ponownie przepis';
+            errorMessage = "Musisz być zalogowany, aby wygenerować ponownie przepis";
             break;
           case 403:
-            errorMessage = 'Nie możesz regenerować tego przepisu';
+            errorMessage = "Nie możesz regenerować tego przepisu";
             break;
           case 429:
-            errorMessage = 'Przekroczyłeś limit regeneracji. Spróbuj ponownie za chwilę';
+            errorMessage = "Przekroczyłeś limit regeneracji. Spróbuj ponownie za chwilę";
             break;
           case 500:
-            errorMessage = 'Błąd serwera. Spróbuj ponownie później';
+            errorMessage = "Błąd serwera. Spróbuj ponownie później";
             break;
         }
 
@@ -243,18 +258,18 @@ export const useRecipeDetails = (recipeId: string) => {
 
       const regeneratedRecipe: RegeneratedRecipeDto = await response.json();
 
-      setState(prev => ({ ...prev, isRegenerating: false }));
+      setState((prev) => ({ ...prev, isRegenerating: false }));
 
       // Navigate to new recipe
       window.location.href = `/recipes/${regeneratedRecipe.id}`;
 
       return regeneratedRecipe;
     } catch (error) {
-      console.error('Error regenerating recipe:', error);
-      setState(prev => ({
+      console.error("Error regenerating recipe:", error);
+      setState((prev) => ({
         ...prev,
         isRegenerating: false,
-        error: error instanceof Error ? error.message : 'Błąd podczas regeneracji'
+        error: error instanceof Error ? error.message : "Błąd podczas regeneracji",
       }));
       return null;
     }
@@ -262,7 +277,7 @@ export const useRecipeDetails = (recipeId: string) => {
 
   // Clear error
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   // Initialize on mount
@@ -273,22 +288,22 @@ export const useRecipeDetails = (recipeId: string) => {
   }, [recipeId, fetchRecipe]);
 
   // Computed values
-  const canRegenerate = state.recipe?.user_rating === 'down';
-  const isSaved = state.recipe?.is_saved || state.saveStatus === 'saved';
+  const canRegenerate = state.recipe?.user_rating === "down";
+  const isSaved = state.recipe?.is_saved || state.saveStatus === "saved";
 
   return {
     // State
     ...state,
-    
+
     // Computed values
     canRegenerate,
     isSaved,
-    
+
     // Actions
     fetchRecipe,
     saveRecipe,
     rateRecipe,
     regenerateRecipe,
-    clearError
+    clearError,
   };
 };

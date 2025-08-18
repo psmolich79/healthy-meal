@@ -1,6 +1,6 @@
 /**
  * Configuration for AI service.
- * 
+ *
  * This file contains all the configuration options for AI recipe generation,
  * including model settings, rate limits, and cost calculations.
  */
@@ -9,7 +9,7 @@ export const AI_CONFIG = {
   // Rate limiting
   RATE_LIMIT: {
     WINDOW_MS: 60 * 60 * 1000, // 1 hour in milliseconds
-    MAX_GENERATIONS_PER_HOUR: 10
+    MAX_GENERATIONS_PER_HOUR: 10,
   },
 
   // Supported AI models
@@ -19,29 +19,29 @@ export const AI_CONFIG = {
       maxTokens: 8192,
       costPer1KInput: 0.03,
       costPer1KOutput: 0.06,
-      description: "Most capable model, best for complex recipes"
+      description: "Most capable model, best for complex recipes",
     },
     "gpt-4o": {
       name: "GPT-4 Omni",
       maxTokens: 128000,
       costPer1KInput: 0.005,
       costPer1KOutput: 0.015,
-      description: "Latest GPT-4 model, excellent for all recipe types"
+      description: "Latest GPT-4 model, excellent for all recipe types",
     },
     "gpt-4o-mini": {
       name: "GPT-4 Omni Mini",
       maxTokens: 128000,
       costPer1KInput: 0.00015,
       costPer1KOutput: 0.0006,
-      description: "Cost-effective GPT-4 model, great for most recipes"
+      description: "Cost-effective GPT-4 model, great for most recipes",
     },
     "gpt-3.5-turbo": {
       name: "GPT-3.5 Turbo",
       maxTokens: 4096,
       costPer1KInput: 0.0015,
       costPer1KOutput: 0.002,
-      description: "Fast and cost-effective, good for simple recipes"
-    }
+      description: "Fast and cost-effective, good for simple recipes",
+    },
   },
 
   // Default model
@@ -103,7 +103,7 @@ Requirements:
 - Ensure ingredients are commonly available
 - Make the recipe healthy and balanced
 - Keep instructions concise but clear
-- Include cooking times and temperatures where relevant`
+- Include cooking times and temperatures where relevant`,
   },
 
   // Error messages
@@ -111,8 +111,8 @@ Requirements:
     RATE_LIMIT_EXCEEDED: "Rate limit exceeded: too many generations in the last hour",
     GENERATION_FAILED: "Recipe generation failed",
     INVALID_MODEL: "Invalid AI model specified",
-    TOKEN_LIMIT_EXCEEDED: "Request too long for selected model"
-  }
+    TOKEN_LIMIT_EXCEEDED: "Request too long for selected model",
+  },
 } as const;
 
 export type AiModel = keyof typeof AI_CONFIG.MODELS;

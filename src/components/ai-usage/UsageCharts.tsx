@@ -1,8 +1,8 @@
-import React from 'react';
-import GenerationsChart from './GenerationsChart';
-import TokensChart from './TokensChart';
-import CostChart from './CostChart';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import React from "react";
+import GenerationsChart from "./GenerationsChart";
+import TokensChart from "./TokensChart";
+import CostChart from "./CostChart";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface UsageChartsProps {
   chartData: any;

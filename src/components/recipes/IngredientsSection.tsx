@@ -1,34 +1,31 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Copy, Check } from 'lucide-react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { ShoppingCart, Copy, Check } from "lucide-react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface IngredientsSectionProps {
   ingredients: string[];
   className?: string;
 }
 
-export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
-  ingredients,
-  className = ''
-}) => {
+export const IngredientsSection: React.FC<IngredientsSectionProps> = ({ ingredients, className = "" }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyIngredients = async () => {
     try {
-      const ingredientsText = ingredients.join('\n');
+      const ingredientsText = ingredients.join("\n");
       await navigator.clipboard.writeText(ingredientsText);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy ingredients:', error);
+      // Error handling for clipboard operations
     }
   };
 
   // Ingredients are already an array, just clean them up
   const ingredientLines = ingredients
-    .filter(ingredient => ingredient.trim().length > 0)
-    .map(ingredient => ingredient.trim());
+    .filter((ingredient) => ingredient.trim().length > 0)
+    .map((ingredient) => ingredient.trim());
 
   return (
     <Card className={className}>
@@ -38,13 +35,8 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
             <ShoppingCart className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold">Składniki</h2>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopyIngredients}
-            className="text-xs"
-          >
+
+          <Button variant="ghost" size="sm" onClick={handleCopyIngredients} className="text-xs">
             {isCopied ? (
               <>
                 <Check className="h-3 w-3 mr-1" />
@@ -89,8 +81,8 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
           {/* Tips */}
           <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
             <p>
-              💡 <strong>Wskazówka:</strong> Przed zakupami sprawdź, czy masz już niektóre składniki w domu. 
-              Możesz skopiować listę przyciskiem powyżej.
+              💡 <strong>Wskazówka:</strong> Przed zakupami sprawdź, czy masz już niektóre składniki w domu. Możesz
+              skopiować listę przyciskiem powyżej.
             </p>
           </div>
         </div>

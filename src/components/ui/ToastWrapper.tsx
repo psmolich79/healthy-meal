@@ -1,5 +1,5 @@
-import React from 'react';
-import { ToastProvider } from './toast';
+import React from "react";
+import { ToastProvider } from "./toast";
 
 interface ToastWrapperProps {
   children: React.ReactNode;

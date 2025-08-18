@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 type ReactNode = React.ReactNode;
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Props {
   children: ReactNode;
@@ -33,21 +33,21 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
   handleRetry = () => {
     const { maxRetries = 5 } = this.props;
-    
+
     if (this.state.retryCount >= maxRetries) {
       return;
     }
 
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       hasError: false,
       error: null,
-      retryCount: prevState.retryCount + 1
+      retryCount: prevState.retryCount + 1,
     }));
 
     // Auto-reset retry count after 30 seconds of successful operation
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const { fallback, maxRetries = 5, className = '' } = this.props;
+      const { fallback, maxRetries = 5, className = "" } = this.props;
       const canRetry = this.state.retryCount < maxRetries;
 
       if (fallback) {
@@ -87,9 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                   {this.state.error && (
                     <details className="text-xs">
-                      <summary className="cursor-pointer font-medium">
-                        Szczegóły błędu (dla deweloperów)
-                      </summary>
+                      <summary className="cursor-pointer font-medium">Szczegóły błędu (dla deweloperów)</summary>
                       <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                         {this.state.error.toString()}
                       </pre>
@@ -98,23 +96,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
                   <div className="flex items-center space-x-2">
                     {canRetry && (
-                      <Button
-                        onClick={this.handleRetry}
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                      >
+                      <Button onClick={this.handleRetry} variant="outline" size="sm" className="text-xs">
                         <RefreshCw className="h-3 w-3 mr-1" />
                         Spróbuj ponownie ({this.state.retryCount + 1}/{maxRetries})
                       </Button>
                     )}
-                    
-                    <Button
-                      onClick={() => window.location.reload()}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
+
+                    <Button onClick={() => window.location.reload()} variant="outline" size="sm" className="text-xs">
                       Odśwież stronę
                     </Button>
                   </div>

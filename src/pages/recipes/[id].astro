@@ -1,12 +1,12 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import { RecipeDetailsView } from '@/components/recipes/RecipeDetailsView';
+import Layout from "@/layouts/Layout.astro";
+import { RecipeDetailsView } from "@/components/recipes/RecipeDetailsView";
 
 // Get recipe ID from params
 const { id } = Astro.params;
 
 if (!id) {
-  return Astro.redirect('/recipes');
+  return Astro.redirect("/recipes");
 }
 ---
 

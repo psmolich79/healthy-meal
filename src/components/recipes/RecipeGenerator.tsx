@@ -1,28 +1,27 @@
-import React, { useCallback } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { SearchInput } from '@/components/ui/SearchInput';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { GenerateButton } from './GenerateButton';
-import { ActiveFilters } from './ActiveFilters';
-import { useRecipeGenerator } from '@/hooks/useRecipeGenerator';
-import type { RecipeGeneratorProps } from './types';
+import React, { useCallback } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GenerateButton } from "./GenerateButton";
+import { ActiveFilters } from "./ActiveFilters";
+import { useRecipeGenerator } from "@/hooks/useRecipeGenerator";
+import type { RecipeGeneratorProps } from "./types";
 
 export const RecipeGenerator: React.FC<RecipeGeneratorProps> = ({
   onRecipeGenerated,
   isLoading: externalLoading = false,
-  userPreferences = []
+  userPreferences = [],
 }) => {
   const {
     query,
     isLoading: hookLoading,
     error,
     canGenerate,
-    characterCount,
     generateRecipe,
     updateQuery,
-    clearError
+    clearError,
   } = useRecipeGenerator();
 
   const isLoading = externalLoading || hookLoading;
@@ -39,7 +38,7 @@ export const RecipeGenerator: React.FC<RecipeGeneratorProps> = ({
   }, [canGenerate, isLoading, generateRecipe, query, onRecipeGenerated]);
 
   const handleEditProfile = useCallback(() => {
-    window.location.href = '/profile';
+    window.location.href = "/profile";
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -66,10 +65,7 @@ export const RecipeGenerator: React.FC<RecipeGeneratorProps> = ({
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
                 <span>{error}</span>
-                <button
-                  onClick={clearError}
-                  className="text-xs underline hover:no-underline"
-                >
+                <button onClick={clearError} className="text-xs underline hover:no-underline">
                   Zamknij
                 </button>
               </AlertDescription>
@@ -78,11 +74,7 @@ export const RecipeGenerator: React.FC<RecipeGeneratorProps> = ({
 
           {/* Loading State */}
           {isLoading ? (
-            <LoadingSpinner
-              isVisible={true}
-              status="Generowanie przepisu..."
-              size="lg"
-            />
+            <LoadingSpinner isVisible={true} status="Generowanie przepisu..." size="lg" />
           ) : (
             <>
               {/* Search Input */}
@@ -113,10 +105,7 @@ export const RecipeGenerator: React.FC<RecipeGeneratorProps> = ({
 
               {/* Active Filters */}
               <div className="border-t pt-6">
-                <ActiveFilters
-                  preferences={userPreferences}
-                  onEditProfile={handleEditProfile}
-                />
+                <ActiveFilters preferences={userPreferences} onEditProfile={handleEditProfile} />
               </div>
             </>
           )}

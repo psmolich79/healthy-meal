@@ -1,6 +1,6 @@
-import React from 'react';
-import { RecipeCard } from './RecipeCard';
-import type { RecipeListItemDto } from '@/types';
+import React from "react";
+import { RecipeCard } from "./RecipeCard";
+import type { RecipeListItemDto } from "@/types";
 
 interface RecipeGridProps {
   recipes: RecipeListItemDto[];
@@ -9,12 +9,7 @@ interface RecipeGridProps {
   className?: string;
 }
 
-export const RecipeGrid: React.FC<RecipeGridProps> = ({
-  recipes,
-  onRecipeClick,
-  onRecipeDelete,
-  className = ''
-}) => {
+export const RecipeGrid: React.FC<RecipeGridProps> = ({ recipes, onRecipeClick, onRecipeDelete, className = "" }) => {
   if (recipes.length === 0) {
     return null;
   }

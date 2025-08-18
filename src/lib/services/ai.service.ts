@@ -1,13 +1,13 @@
-import OpenAI from 'openai';
+import OpenAI from "openai";
 import type { SupabaseClient } from "../../db/supabase.client";
 import type { Profile, AiUsage } from "../../types";
 
 /**
  * Service for AI-powered recipe generation.
- * 
+ *
  * This service handles communication with AI models, prompt engineering,
  * rate limiting, and cost tracking for recipe generation.
- * 
+ *
  * @example
  * ```typescript
  * const aiService = new AiService(supabaseClient);
@@ -21,7 +21,7 @@ export class AiService {
 
   constructor(private readonly supabase: SupabaseClient) {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY,
     });
   }
 
@@ -37,7 +37,7 @@ export class AiService {
     query: string,
     userPreferences: Profile["preferences"],
     userId: string,
-    model: string = "gpt-4o-mini"
+    model = "gpt-4o-mini"
   ): Promise<{
     title: string;
     ingredients: string[];
@@ -58,15 +58,16 @@ export class AiService {
         messages: [
           {
             role: "system",
-            content: "You are a professional chef and nutritionist. Generate healthy, practical recipes based on user requests. IMPORTANT: Always generate recipes in Polish language. Always respond with valid JSON only, no additional text."
+            content:
+              "You are a professional chef and nutritionist. Generate healthy, practical recipes based on user requests. IMPORTANT: Always generate recipes in Polish language. Always respond with valid JSON only, no additional text.",
           },
           {
             role: "user",
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         temperature: 0.7,
-        max_tokens: 2000
+        max_tokens: 2000,
       });
 
       const response = completion.choices[0]?.message?.content;
@@ -79,16 +80,16 @@ export class AiService {
       try {
         // Remove markdown code blocks if present
         let cleanResponse = response.trim();
-        if (cleanResponse.startsWith('```json')) {
+        if (cleanResponse.startsWith("```json")) {
           cleanResponse = cleanResponse.substring(7); // Remove ```json
         }
-        if (cleanResponse.startsWith('```')) {
+        if (cleanResponse.startsWith("```")) {
           cleanResponse = cleanResponse.substring(3); // Remove ```
         }
-        if (cleanResponse.endsWith('```')) {
+        if (cleanResponse.endsWith("```")) {
           cleanResponse = cleanResponse.substring(0, cleanResponse.length - 3); // Remove trailing ```
         }
-        
+
         cleanResponse = cleanResponse.trim();
         parsedResponse = JSON.parse(cleanResponse);
       } catch (parseError) {
@@ -101,7 +102,7 @@ export class AiService {
         title: parsedResponse.title || "Generated Recipe",
         ingredients: parsedResponse.ingredients || [],
         shopping_list: parsedResponse.shopping_list || [],
-        instructions: parsedResponse.instructions || []
+        instructions: parsedResponse.instructions || [],
       };
 
       // Calculate actual token usage
@@ -114,14 +115,13 @@ export class AiService {
         model,
         input_tokens: inputTokens,
         output_tokens: outputTokens,
-        cost: this.calculateCost(model, inputTokens, outputTokens) || 0
+        cost: this.calculateCost(model, inputTokens, outputTokens) || 0,
       });
 
       return {
         ...generatedRecipe,
-        aiGeneration
+        aiGeneration,
       };
-
     } catch (error) {
       console.error("Error generating recipe with AI:", error);
       throw new Error("Recipe generation failed");
@@ -150,7 +150,6 @@ export class AiService {
       if (count && count >= this.maxGenerationsPerHour) {
         throw new Error("Rate limit exceeded: too many generations in the last hour");
       }
-
     } catch (error) {
       if (error instanceof Error && error.message.includes("Rate limit exceeded")) {
         throw error;
@@ -167,9 +166,10 @@ export class AiService {
    * @returns Formatted prompt string
    */
   private buildRecipePrompt(query: string, userPreferences: Profile["preferences"]): string {
-    const preferencesText = userPreferences && userPreferences.length > 0 
-      ? `\n\nUser Preferences:\n${userPreferences.map(p => `- ${p}`).join('\n')}`
-      : '';
+    const preferencesText =
+      userPreferences && userPreferences.length > 0
+        ? `\n\nUser Preferences:\n${userPreferences.map((p) => `- ${p}`).join("\n")}`
+        : "";
 
     return `Generate a detailed recipe based on the following request:
 
@@ -211,11 +211,9 @@ Requirements:
     instructions: string[];
   }> {
     // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const preferencesText = userPreferences && userPreferences.length > 0 
-      ? ` (${userPreferences.join(', ')})`
-      : '';
+    const preferencesText = userPreferences && userPreferences.length > 0 ? ` (${userPreferences.join(", ")})` : "";
 
     return {
       title: `AI Generated Recipe: ${query.substring(0, 30)}...${preferencesText}`,
@@ -224,21 +222,21 @@ Requirements:
         "1 cup warm water",
         "2 tablespoons olive oil",
         "1 teaspoon salt",
-        "1 teaspoon active dry yeast"
+        "1 teaspoon active dry yeast",
       ],
       shopping_list: [
         "All-purpose flour (2 cups)",
         "Active dry yeast (1 packet)",
         "Olive oil (small bottle)",
-        "Salt (if not available)"
+        "Salt (if not available)",
       ],
       instructions: [
         "Mix warm water with yeast and let stand for 5 minutes",
         "Combine flour and salt in a large bowl",
         "Add yeast mixture and olive oil to flour",
         "Knead dough for 10 minutes until smooth",
-        "Let rise for 1 hour, then shape and bake"
-      ]
+        "Let rise for 1 hour, then shape and bake",
+      ],
     };
   }
 
@@ -247,13 +245,15 @@ Requirements:
    * @param generationData - Generation data to log
    * @returns Logged generation record
    */
-  private async logGeneration(generationData: Omit<AiUsage, "id" | "recipe_id" | "created_at">): Promise<Omit<AiUsage, "id" | "recipe_id" | "created_at">> {
+  private async logGeneration(
+    generationData: Omit<AiUsage, "id" | "recipe_id" | "created_at">
+  ): Promise<Omit<AiUsage, "id" | "recipe_id" | "created_at">> {
     try {
       const { data, error } = await this.supabase
         .from("ai_usage")
         .insert({
           ...generationData,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -285,17 +285,17 @@ Requirements:
         "gpt-4": { input: 0.03, output: 0.06 },
         "gpt-4o": { input: 0.005, output: 0.015 },
         "gpt-4o-mini": { input: 0.00015, output: 0.0006 },
-        "gpt-3.5-turbo": { input: 0.0015, output: 0.002 }
+        "gpt-3.5-turbo": { input: 0.0015, output: 0.002 },
       };
 
       const modelCosts = costs[model as keyof typeof costs];
       if (!modelCosts) {
         return null;
       }
-      
+
       const inputCost = (inputTokens / 1000) * modelCosts.input;
       const outputCost = (outputTokens / 1000) * modelCosts.output;
-      
+
       return Math.round((inputCost + outputCost) * 10000) / 10000; // Round to 4 decimal places
     } catch (error) {
       console.error("Error calculating cost:", error);
@@ -325,7 +325,7 @@ Requirements:
     total_output_tokens: number;
     total_cost: number | null;
     models_used: Record<string, { generations: number; cost: number | null }>;
-    daily_breakdown: Array<{ date: string; generations: number; cost: number | null }>;
+    daily_breakdown: { date: string; generations: number; cost: number | null }[];
   }> {
     try {
       // Calculate start and end dates based on period
@@ -356,7 +356,7 @@ Requirements:
       // Daily breakdown
       const dailyBreakdownMap = new Map<string, { generations: number; cost: number | null }>();
 
-      generations?.forEach(generation => {
+      generations?.forEach((generation) => {
         totalGenerations++;
         totalInputTokens += generation.input_tokens || 0;
         totalOutputTokens += generation.output_tokens || 0;
@@ -371,7 +371,7 @@ Requirements:
         modelBreakdown[model].cost += generation.cost || 0;
 
         // Daily breakdown
-        const date = generation.created_at.split('T')[0]; // Extract YYYY-MM-DD
+        const date = generation.created_at.split("T")[0]; // Extract YYYY-MM-DD
         if (!dailyBreakdownMap.has(date)) {
           dailyBreakdownMap.set(date, { generations: 0, cost: 0 });
         }
@@ -394,9 +394,8 @@ Requirements:
         total_output_tokens: totalOutputTokens,
         total_cost: totalCost > 0 ? Math.round(totalCost * 100) / 100 : 0,
         models_used: modelBreakdown,
-        daily_breakdown: dailyBreakdown
+        daily_breakdown: dailyBreakdown,
       };
-
     } catch (error) {
       console.error("Error getting AI usage:", error);
       throw error;
@@ -442,7 +441,7 @@ Requirements:
         }
         start = new Date(startDate);
         end = new Date(endDate);
-        
+
         // Validate dates
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
           throw new Error("Invalid date format");

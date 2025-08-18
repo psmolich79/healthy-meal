@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * Custom hook for managing state in localStorage
@@ -6,15 +6,11 @@ import { useState, useEffect, useCallback } from 'react';
  * @param initialValue - initial value if key doesn't exist
  * @returns [value, setValue] - current value and setter function
  */
-export function useLocalStorage<T>(
-  key: string,
-  initialValue: T
-): [T, (value: T | ((val: T) => T)) => void] {
-  
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   // Get value from localStorage or use initial value
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return initialValue;
       }
 
@@ -27,22 +23,25 @@ export function useLocalStorage<T>(
   });
 
   // Update localStorage when value changes
-  const setValue = useCallback((value: T | ((val: T) => T)) => {
-    try {
-      // Allow value to be a function so we have the same API as useState
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      
-      // Save state
-      setStoredValue(valueToStore);
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+  const setValue = useCallback(
+    (value: T | ((val: T) => T)) => {
+      try {
+        // Allow value to be a function so we have the same API as useState
+        const valueToStore = value instanceof Function ? value(storedValue) : value;
+
+        // Save state
+        setStoredValue(valueToStore);
+
+        // Save to localStorage
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        }
+      } catch (error) {
+        console.error(`Error setting localStorage key "${key}":`, error);
       }
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
-    }
-  }, [key, storedValue]);
+    },
+    [key, storedValue]
+  );
 
   // Listen for changes in other tabs/windows
   useEffect(() => {
@@ -56,9 +55,9 @@ export function useLocalStorage<T>(
       }
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+      return () => window.removeEventListener("storage", handleStorageChange);
     }
   }, [key]);
 
@@ -77,19 +76,21 @@ export function useLocalStorageWithTTL<T>(
   initialValue: T,
   ttl?: number
 ): [T, (value: T) => void, () => void] {
-  
   const [value, setValue] = useLocalStorage<T>(key, initialValue);
 
-  const setValueWithTTL = useCallback((newValue: T) => {
-    const data = {
-      value: newValue,
-      timestamp: Date.now()
-    };
-    setValue(data as any);
-  }, [setValue]);
+  const setValueWithTTL = useCallback(
+    (newValue: T) => {
+      const data = {
+        value: newValue,
+        timestamp: Date.now(),
+      };
+      setValue(data as any);
+    },
+    [setValue]
+  );
 
   const removeValue = useCallback(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.localStorage.removeItem(key);
     }
     setValue(initialValue);
@@ -97,7 +98,7 @@ export function useLocalStorageWithTTL<T>(
 
   // Check TTL on mount and when value changes
   useEffect(() => {
-    if (!ttl || typeof window === 'undefined') return;
+    if (!ttl || typeof window === "undefined") return;
 
     const checkTTL = () => {
       try {
@@ -147,16 +148,18 @@ export function useLocalStorageWithValidation<T>(
   initialValue: T,
   validator: (value: any) => value is T
 ): [T, (value: T) => void] {
-  
   const [value, setValue] = useLocalStorage<T>(key, initialValue);
 
-  const setValidatedValue = useCallback((newValue: T) => {
-    if (validator(newValue)) {
-      setValue(newValue);
-    } else {
-      console.warn(`Invalid value for localStorage key "${key}":`, newValue);
-    }
-  }, [key, validator, setValue]);
+  const setValidatedValue = useCallback(
+    (newValue: T) => {
+      if (validator(newValue)) {
+        setValue(newValue);
+      } else {
+        console.warn(`Invalid value for localStorage key "${key}":`, newValue);
+      }
+    },
+    [key, validator, setValue]
+  );
 
   // Validate stored value on mount
   useEffect(() => {

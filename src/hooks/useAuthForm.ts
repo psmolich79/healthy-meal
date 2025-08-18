@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
-import type { 
-  AuthFormType, 
-  AuthFormData, 
-  ValidationErrors, 
+import { useState, useCallback } from "react";
+import type {
+  AuthFormType,
+  AuthFormData,
+  ValidationErrors,
   ValidationResult,
   LoginFormData,
   RegisterFormData,
-  ResetPasswordFormData
-} from '../types';
+  ResetPasswordFormData,
+} from "../types";
 
 /**
  * Custom hook for managing authentication form state and validation.
@@ -15,11 +15,11 @@ import type {
  */
 export const useAuthForm = (formType: AuthFormType) => {
   const [formData, setFormData] = useState<AuthFormData>({
-    email: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
     rememberMe: false,
-    acceptTerms: false
+    acceptTerms: false,
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -28,52 +28,55 @@ export const useAuthForm = (formType: AuthFormType) => {
   /**
    * Validates a single field in real-time.
    */
-  const validateField = useCallback((field: keyof AuthFormData, value: string | boolean): string | null => {
-    switch (field) {
-      case 'email':
-        if (!value || typeof value !== 'string') {
-          return 'Email jest wymagany';
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          return 'Wprowadź poprawny adres email';
-        }
-        return null;
-
-      case 'password':
-        if (!value || typeof value !== 'string') {
-          return 'Hasło jest wymagane';
-        }
-        if (value.length < 8) {
-          return 'Hasło musi mieć minimum 8 znaków';
-        }
-        if (formType === 'register') {
-          const hasUpperCase = /[A-Z]/.test(value);
-          const hasLowerCase = /[a-z]/.test(value);
-          const hasNumbers = /\d/.test(value);
-          
-          if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-            return 'Hasło musi zawierać wielką literę, małą literę i cyfrę';
+  const validateField = useCallback(
+    (field: keyof AuthFormData, value: string | boolean): string | null => {
+      switch (field) {
+        case "email":
+          if (!value || typeof value !== "string") {
+            return "Email jest wymagany";
           }
-        }
-        return null;
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            return "Wprowadź poprawny adres email";
+          }
+          return null;
 
-      case 'confirmPassword':
-        if (formType === 'register' && value !== formData.password) {
-          return 'Hasła nie są identyczne';
-        }
-        return null;
+        case "password":
+          if (!value || typeof value !== "string") {
+            return "Hasło jest wymagane";
+          }
+          if (value.length < 8) {
+            return "Hasło musi mieć minimum 8 znaków";
+          }
+          if (formType === "register") {
+            const hasUpperCase = /[A-Z]/.test(value);
+            const hasLowerCase = /[a-z]/.test(value);
+            const hasNumbers = /\d/.test(value);
 
-      case 'acceptTerms':
-        if (formType === 'register' && !value) {
-          return 'Musisz zaakceptować warunki użytkowania';
-        }
-        return null;
+            if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+              return "Hasło musi zawierać wielką literę, małą literę i cyfrę";
+            }
+          }
+          return null;
 
-      default:
-        return null;
-    }
-  }, [formType, formData.password]);
+        case "confirmPassword":
+          if (formType === "register" && value !== formData.password) {
+            return "Hasła nie są identyczne";
+          }
+          return null;
+
+        case "acceptTerms":
+          if (formType === "register" && !value) {
+            return "Musisz zaakceptować warunki użytkowania";
+          }
+          return null;
+
+        default:
+          return null;
+      }
+    },
+    [formType, formData.password]
+  );
 
   /**
    * Validates the entire form before submission.
@@ -82,21 +85,21 @@ export const useAuthForm = (formType: AuthFormType) => {
     const newErrors: ValidationErrors = {};
 
     // Validate email
-    const emailError = validateField('email', formData.email);
+    const emailError = validateField("email", formData.email);
     if (emailError) newErrors.email = emailError;
 
     // Validate password for login and register
-    if (formType !== 'reset-password') {
-      const passwordError = validateField('password', formData.password || '');
+    if (formType !== "reset-password") {
+      const passwordError = validateField("password", formData.password || "");
       if (passwordError) newErrors.password = passwordError;
     }
 
     // Validate confirm password for register
-    if (formType === 'register') {
-      const confirmPasswordError = validateField('confirmPassword', formData.confirmPassword || '');
+    if (formType === "register") {
+      const confirmPasswordError = validateField("confirmPassword", formData.confirmPassword || "");
       if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
 
-      const termsError = validateField('acceptTerms', formData.acceptTerms || false);
+      const termsError = validateField("acceptTerms", formData.acceptTerms || false);
       if (termsError) newErrors.acceptTerms = termsError;
     }
 
@@ -107,43 +110,46 @@ export const useAuthForm = (formType: AuthFormType) => {
   /**
    * Updates form data and validates the field in real-time.
    */
-  const updateField = useCallback((field: keyof AuthFormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear existing error for this field
-    setErrors(prev => ({ ...prev, [field]: undefined }));
-    
-    // Validate field in real-time
-    const error = validateField(field, value);
-    if (error) {
-      setErrors(prev => ({ ...prev, [field]: error }));
-    }
-  }, [validateField]);
+  const updateField = useCallback(
+    (field: keyof AuthFormData, value: string | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear existing error for this field
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+
+      // Validate field in real-time
+      const error = validateField(field, value);
+      if (error) {
+        setErrors((prev) => ({ ...prev, [field]: error }));
+      }
+    },
+    [validateField]
+  );
 
   /**
    * Handles form submission with validation.
    */
   const handleSubmit = useCallback(async (): Promise<boolean> => {
-    console.log('useAuthForm handleSubmit called, formData:', formData);
+    console.log("useAuthForm handleSubmit called, formData:", formData);
     const validation = validateForm();
-    console.log('Validation result:', validation);
-    
+    console.log("Validation result:", validation);
+
     if (!validation.isValid) {
-      console.log('Validation failed, setting errors:', validation.errors);
+      console.log("Validation failed, setting errors:", validation.errors);
       setErrors(validation.errors);
       return false;
     }
 
-    console.log('Validation passed, form ready for submission');
+    console.log("Validation passed, form ready for submission");
     setIsLoading(true);
     setErrors({});
-    
+
     try {
       // Form is valid, ready for submission
       return true;
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      setErrors({ general: 'Wystąpił błąd podczas przetwarzania formularza' });
+      console.error("Error in handleSubmit:", error);
+      setErrors({ general: "Wystąpił błąd podczas przetwarzania formularza" });
       return false;
     } finally {
       setIsLoading(false);
@@ -155,11 +161,11 @@ export const useAuthForm = (formType: AuthFormType) => {
    */
   const resetForm = useCallback(() => {
     setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
+      email: "",
+      password: "",
+      confirmPassword: "",
       rememberMe: false,
-      acceptTerms: false
+      acceptTerms: false,
     });
     setErrors({});
     setIsLoading(false);
@@ -169,7 +175,7 @@ export const useAuthForm = (formType: AuthFormType) => {
    * Sets a default email value (useful for pre-filling from URL params).
    */
   const setDefaultEmail = useCallback((email: string) => {
-    setFormData(prev => ({ ...prev, email }));
+    setFormData((prev) => ({ ...prev, email }));
   }, []);
 
   return {
@@ -181,6 +187,6 @@ export const useAuthForm = (formType: AuthFormType) => {
     resetForm,
     setDefaultEmail,
     validateField,
-    validateForm
+    validateForm,
   };
 };

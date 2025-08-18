@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Button } from "@/components/ui/button";
 
 interface SaveButtonProps {
   isSaved: boolean;
@@ -10,7 +10,7 @@ interface SaveButtonProps {
 
 const SaveButton: React.FC<SaveButtonProps> = ({ isSaved, onClick, isLoading, disabled }) => (
   <Button onClick={onClick} disabled={disabled || isLoading}>
-    {isLoading ? 'Zapisywanie...' : isSaved ? 'Zapisano' : 'Zapisz'}
+    {isLoading ? "Zapisywanie..." : isSaved ? "Zapisano" : "Zapisz"}
   </Button>
 );
 

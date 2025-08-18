@@ -1,23 +1,20 @@
-import React from 'react';
-import { User, Calendar } from 'lucide-react';
-import { CardHeader } from '@/components/ui/card';
-import type { ProfileDto } from '@/types';
+import React from "react";
+import { User, Calendar } from "lucide-react";
+import { CardHeader } from "@/components/ui/card";
+import type { ProfileDto } from "@/types";
 
 interface ProfileHeaderProps {
   userProfile?: ProfileDto | null;
   className?: string;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
-  userProfile,
-  className = ''
-}) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userProfile, className = "" }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('pl-PL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString("pl-PL", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 

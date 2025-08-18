@@ -1,5 +1,5 @@
-import { supabaseClient } from '@/db/supabase.client';
-import type { LoginFormData, RegisterFormData, ResetPasswordFormData } from '@/types';
+import { supabaseClient } from "@/db/supabase.client";
+import type { LoginFormData, RegisterFormData, ResetPasswordFormData } from "@/types";
 
 /**
  * Authentication service for handling user authentication operations.
@@ -17,9 +17,9 @@ export class AuthService {
       options: {
         emailRedirectTo: `${window.location.origin}/profile`,
         data: {
-          email_confirmed: false
-        }
-      }
+          email_confirmed: false,
+        },
+      },
     });
 
     if (error) {
@@ -35,7 +35,7 @@ export class AuthService {
   static async signIn(data: LoginFormData) {
     const { data: authData, error } = await supabaseClient.auth.signInWithPassword({
       email: data.email,
-      password: data.password
+      password: data.password,
     });
 
     if (error) {
@@ -49,12 +49,9 @@ export class AuthService {
    * Sends a password reset email.
    */
   static async resetPassword(data: ResetPasswordFormData) {
-    const { data: resetData, error } = await supabaseClient.auth.resetPasswordForEmail(
-      data.email,
-      {
-        redirectTo: `${window.location.origin}/reset-password/confirm`
-      }
-    );
+    const { data: resetData, error } = await supabaseClient.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${window.location.origin}/reset-password/confirm`,
+    });
 
     if (error) {
       throw new Error(this.getErrorMessage(error));
@@ -68,7 +65,7 @@ export class AuthService {
    */
   static async signOut() {
     const { error } = await supabaseClient.auth.signOut();
-    
+
     if (error) {
       throw new Error(this.getErrorMessage(error));
     }
@@ -78,8 +75,11 @@ export class AuthService {
    * Gets the current user session.
    */
   static async getCurrentSession() {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
+    const {
+      data: { session },
+      error,
+    } = await supabaseClient.auth.getSession();
+
     if (error) {
       throw new Error(this.getErrorMessage(error));
     }
@@ -91,8 +91,11 @@ export class AuthService {
    * Gets the current user.
    */
   static async getCurrentUser() {
-    const { data: { user }, error } = await supabaseClient.auth.getUser();
-    
+    const {
+      data: { user },
+      error,
+    } = await supabaseClient.auth.getUser();
+
     if (error) {
       throw new Error(this.getErrorMessage(error));
     }
@@ -104,8 +107,11 @@ export class AuthService {
    * Refreshes the current user session.
    */
   static async refreshSession() {
-    const { data: { session }, error } = await supabaseClient.auth.refreshSession();
-    
+    const {
+      data: { session },
+      error,
+    } = await supabaseClient.auth.refreshSession();
+
     if (error) {
       throw new Error(this.getErrorMessage(error));
     }
@@ -118,7 +124,7 @@ export class AuthService {
    */
   static async updatePassword(newPassword: string) {
     const { data, error } = await supabaseClient.auth.updateUser({
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) {
@@ -133,7 +139,7 @@ export class AuthService {
    */
   static async updateEmail(newEmail: string) {
     const { data, error } = await supabaseClient.auth.updateUser({
-      email: newEmail
+      email: newEmail,
     });
 
     if (error) {
@@ -148,7 +154,7 @@ export class AuthService {
    */
   static async confirmPasswordReset(newPassword: string) {
     const { data, error } = await supabaseClient.auth.updateUser({
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) {
@@ -163,8 +169,8 @@ export class AuthService {
    */
   static async resendEmailConfirmation(email: string) {
     const { data, error } = await supabaseClient.auth.resend({
-      type: 'signup',
-      email: email
+      type: "signup",
+      email: email,
     });
 
     if (error) {
@@ -178,22 +184,22 @@ export class AuthService {
    * Maps Supabase error messages to user-friendly Polish messages.
    */
   private static getErrorMessage(error: any): string {
-    const errorMessage = error.message || 'Wystąpił nieoczekiwany błąd';
+    const errorMessage = error.message || "Wystąpił nieoczekiwany błąd";
 
     // Map common Supabase auth errors to Polish
     const errorMap: Record<string, string> = {
-      'Invalid login credentials': 'Nieprawidłowy email lub hasło',
-      'Email not confirmed': 'Email nie został potwierdzony. Sprawdź swoją skrzynkę odbiorczą.',
-      'User already registered': 'Ten adres email jest już zarejestrowany',
-      'Password should be at least 6 characters': 'Hasło musi mieć minimum 6 znaków',
-      'Unable to validate email address: invalid format': 'Nieprawidłowy format adresu email',
-      'User not found': 'Użytkownik nie został znaleziony',
-      'Too many requests': 'Zbyt wiele prób. Spróbuj ponownie za chwilę.',
-      'Email rate limit exceeded': 'Przekroczono limit prób. Spróbuj ponownie za chwilę.',
-      'Signup disabled': 'Rejestracja jest obecnie wyłączona',
-      'Signup not allowed': 'Rejestracja nie jest dozwolona',
-      'Network error': 'Błąd sieci. Sprawdź połączenie internetowe.',
-      'Service unavailable': 'Usługa jest niedostępna. Spróbuj ponownie później.'
+      "Invalid login credentials": "Nieprawidłowy email lub hasło",
+      "Email not confirmed": "Email nie został potwierdzony. Sprawdź swoją skrzynkę odbiorczą.",
+      "User already registered": "Ten adres email jest już zarejestrowany",
+      "Password should be at least 6 characters": "Hasło musi mieć minimum 6 znaków",
+      "Unable to validate email address: invalid format": "Nieprawidłowy format adresu email",
+      "User not found": "Użytkownik nie został znaleziony",
+      "Too many requests": "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
+      "Email rate limit exceeded": "Przekroczono limit prób. Spróbuj ponownie za chwilę.",
+      "Signup disabled": "Rejestracja jest obecnie wyłączona",
+      "Signup not allowed": "Rejestracja nie jest dozwolona",
+      "Network error": "Błąd sieci. Sprawdź połączenie internetowe.",
+      "Service unavailable": "Usługa jest niedostępna. Spróbuj ponownie później.",
     };
 
     // Try to find a Polish translation
@@ -228,12 +234,12 @@ export class AuthService {
   static async getAuthHeaders(): Promise<Record<string, string>> {
     const session = await this.getCurrentSession();
     if (!session?.access_token) {
-      throw new Error('Brak tokenu uwierzytelniającego');
+      throw new Error("Brak tokenu uwierzytelniającego");
     }
-    
+
     return {
-      'Authorization': `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -259,7 +265,7 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      console.error('Session validation error:', error);
+      console.error("Session validation error:", error);
       return false;
     }
   }
@@ -270,9 +276,9 @@ export class AuthService {
   static async getAuthToken(): Promise<string> {
     const session = await this.getCurrentSession();
     if (!session?.access_token) {
-      throw new Error('Brak tokenu uwierzytelniającego');
+      throw new Error("Brak tokenu uwierzytelniającego");
     }
-    
+
     return session.access_token;
   }
 }

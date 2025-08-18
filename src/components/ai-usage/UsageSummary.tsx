@@ -1,7 +1,7 @@
-import React from 'react';
-import TotalGenerations from './TotalGenerations';
-import TotalTokens from './TotalTokens';
-import TotalCost from './TotalCost';
+import React from "react";
+import TotalGenerations from "./TotalGenerations";
+import TotalTokens from "./TotalTokens";
+import TotalCost from "./TotalCost";
 
 interface UsageSummaryProps {
   summary: {

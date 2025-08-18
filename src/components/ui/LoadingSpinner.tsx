@@ -1,12 +1,12 @@
-import React from 'react';
-import { Loader2, ChefHat } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import React from "react";
+import { Loader2, ChefHat } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export interface LoadingSpinnerProps {
   isVisible: boolean;
   status?: string;
   progress?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -14,21 +14,21 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   isVisible,
   status = "Ładowanie...",
   progress,
-  size = 'md',
-  className = ''
+  size = "md",
+  className = "",
 }) => {
   if (!isVisible) return null;
 
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   const containerClasses = {
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8'
+    sm: "p-4",
+    md: "p-6",
+    lg: "p-8",
   };
 
   return (
@@ -41,17 +41,13 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
       {/* Status text */}
       <div className="text-center space-y-2">
-        <p className="text-sm font-medium text-foreground">
-          {status}
-        </p>
-        
+        <p className="text-sm font-medium text-foreground">{status}</p>
+
         {/* Progress bar if provided */}
-        {progress !== undefined && (
+        {progress !== undefined && progress !== null && (
           <div className="w-64 max-w-full">
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(progress)}% ukończone
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{Math.round(progress)}% ukończone</p>
           </div>
         )}
       </div>

@@ -1,24 +1,21 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import type { AuthFormType } from '@/types';
+import Layout from "@/layouts/Layout.astro";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import type { AuthFormType } from "@/types";
 
 // Get email from URL params if provided
 const url = new URL(Astro.request.url);
-const email = url.searchParams.get('email') || undefined;
+const email = url.searchParams.get("email") || undefined;
 
 // Set page metadata
-const title = 'Rejestracja - HealthyMeal';
-const description = 'Zarejestruj się w HealthyMeal, aby uzyskać dostęp do spersonalizowanych przepisów i preferencji żywieniowych.';
+const title = "Rejestracja - HealthyMeal";
+const description =
+  "Zarejestruj się w HealthyMeal, aby uzyskać dostęp do spersonalizowanych przepisów i preferencji żywieniowych.";
 ---
 
 <Layout title={title} description={description}>
   <div class="min-h-screen">
-    <AuthLayout 
-      formType="register"
-      defaultEmail={email}
-      client:load
-    />
+    <AuthLayout formType="register" defaultEmail={email} client:load />
   </div>
 </Layout>
 

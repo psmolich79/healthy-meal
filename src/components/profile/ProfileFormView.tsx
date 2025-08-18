@@ -1,23 +1,20 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ProfileHeader } from './ProfileHeader';
-import { PreferencesAccordion } from './PreferencesAccordion';
-import { SaveButton } from './SaveButton';
-import { useProfileForm } from '@/hooks/useProfileForm';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ProfileHeader } from "./ProfileHeader";
+import { PreferencesAccordion } from "./PreferencesAccordion";
+import { SaveButton } from "./SaveButton";
+import { useProfileForm } from "@/hooks/useProfileForm";
 
 interface ProfileFormViewProps {
   initialPreferences?: string[];
   className?: string;
 }
 
-export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
-  initialPreferences = [],
-  className = ''
-}) => {
+export const ProfileFormView: React.FC<ProfileFormViewProps> = ({ initialPreferences = [], className = "" }) => {
   const {
     preferences,
     profile,
@@ -30,7 +27,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
     maxPreferences,
     updatePreferences,
     savePreferences,
-    clearError
+    clearError,
   } = useProfileForm();
 
   const handleSaveClick = async () => {
@@ -41,11 +38,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
   if (isLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <LoadingSpinner
-          isVisible={true}
-          status="Ładowanie profilu..."
-          size="lg"
-        />
+        <LoadingSpinner isVisible={true} status="Ładowanie profilu..." size="lg" />
       </div>
     );
   }
@@ -56,7 +49,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
         {/* Main Profile Card */}
         <Card>
           <ProfileHeader userProfile={profile} />
-          
+
           <CardContent className="space-y-6">
             {/* Error Alert */}
             {error && (
@@ -64,10 +57,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>{error}</span>
-                  <button
-                    onClick={clearError}
-                    className="text-xs underline hover:no-underline"
-                  >
+                  <button onClick={clearError} className="text-xs underline hover:no-underline">
                     Zamknij
                   </button>
                 </AlertDescription>
@@ -78,9 +68,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
             {!hasChanges && preferences.length > 0 && !error && (
               <Alert>
                 <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Preferencje zostały automatycznie zapisane
-                </AlertDescription>
+                <AlertDescription>Preferencje zostały automatycznie zapisane</AlertDescription>
               </Alert>
             )}
 
@@ -103,12 +91,7 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
 
             {/* Save Button */}
             <div className="flex justify-center pt-4">
-              <SaveButton
-                onClick={handleSaveClick}
-                disabled={!isValid}
-                isLoading={isSaving}
-                hasChanges={hasChanges}
-              />
+              <SaveButton onClick={handleSaveClick} disabled={!isValid} isLoading={isSaving} hasChanges={hasChanges} />
             </div>
 
             {/* Footer Info */}
@@ -117,9 +100,11 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
                 Twoje preferencje są wykorzystywane do personalizacji przepisów
               </p>
               <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
-                <span>Preferencje: {preferencesCount}/{maxPreferences}</span>
+                <span>
+                  Preferencje: {preferencesCount}/{maxPreferences}
+                </span>
                 <span>•</span>
-                <span>Auto-zapis: {hasChanges ? 'Oczekuje...' : 'Aktualny'}</span>
+                <span>Auto-zapis: {hasChanges ? "Oczekuje..." : "Aktualny"}</span>
               </div>
             </div>
           </CardContent>
@@ -135,8 +120,8 @@ export const ProfileFormView: React.FC<ProfileFormViewProps> = ({
               <div className="space-y-2">
                 <h3 className="font-semibold">Skonfiguruj swoje preferencje</h3>
                 <p className="text-sm text-muted-foreground">
-                  Wybierz swoje preferencje żywieniowe, aby AI mogło generować 
-                  spersonalizowane przepisy dopasowane do Twoich potrzeb.
+                  Wybierz swoje preferencje żywieniowe, aby AI mogło generować spersonalizowane przepisy dopasowane do
+                  Twoich potrzeb.
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-muted-foreground pt-4">

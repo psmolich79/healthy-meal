@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
-import { SearchInput } from '@/components/ui/SearchInput';
-import { SortToggle } from './SortToggle';
-import { FilterToggle } from './FilterToggle';
-import type { SortOption, FilterOption } from '@/types';
+import React, { useState, useEffect, useCallback } from "react";
+import { X } from "lucide-react";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { SortToggle } from "./SortToggle";
+import { FilterToggle } from "./FilterToggle";
+import type { SortOption, FilterOption } from "@/types";
 
 interface RecipeListControlsProps {
   onSearch: (query: string) => void;
@@ -18,7 +18,7 @@ interface RecipeListControlsProps {
   className?: string;
 }
 
-export const RecipeListControls: React.FC<RecipeListControlsProps> = ({
+export const RecipeListControls: React.FC<RecipeListControlsProps> = React.memo(({
   onSearch,
   onSort,
   onFilter,
@@ -28,7 +28,7 @@ export const RecipeListControls: React.FC<RecipeListControlsProps> = ({
   onClearSearch,
   sortOptions,
   filterOptions,
-  className = ''
+  className = "",
 }) => {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -50,19 +50,19 @@ export const RecipeListControls: React.FC<RecipeListControlsProps> = ({
         clearTimeout(searchTimeout);
       }
     };
-  }, [localSearchQuery, onSearch]);
+  }, [localSearchQuery, onSearch]); // Remove searchTimeout from dependencies
 
   // Sync with external search query changes
   useEffect(() => {
     if (searchQuery !== localSearchQuery) {
       setLocalSearchQuery(searchQuery);
     }
-  }, [searchQuery]);
+  }, [searchQuery]); // Remove localSearchQuery from dependencies to prevent infinite loop
 
-  const handleClearSearch = () => {
-    setLocalSearchQuery('');
+  const handleClearSearch = useCallback(() => {
+    setLocalSearchQuery("");
     onClearSearch();
-  };
+  }, [onClearSearch]);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -76,7 +76,7 @@ export const RecipeListControls: React.FC<RecipeListControlsProps> = ({
           showCharacterCount={false}
           className="w-full"
         />
-        
+
         {localSearchQuery && (
           <button
             onClick={handleClearSearch}
@@ -92,41 +92,25 @@ export const RecipeListControls: React.FC<RecipeListControlsProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-2">
           {/* Sort Toggle */}
-          <SortToggle
-            currentSort={currentSort}
-            onSortChange={onSort}
-            options={sortOptions}
-          />
+          <SortToggle currentSort={currentSort} onSortChange={onSort} options={sortOptions} />
 
           {/* Filter Toggle */}
-          <FilterToggle
-            currentFilter={currentFilter}
-            onFilterChange={onFilter}
-            options={filterOptions}
-          />
+          <FilterToggle currentFilter={currentFilter} onFilterChange={onFilter} options={filterOptions} />
         </div>
 
         {/* Active Filters Summary */}
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          {localSearchQuery && (
-            <span className="bg-muted px-2 py-1 rounded text-xs">
-              Szukaj: "{localSearchQuery}"
-            </span>
+          {localSearchQuery && <span className="bg-muted px-2 py-1 rounded text-xs">Szukaj: "{localSearchQuery}"</span>}
+
+          {currentFilter.value !== "all" && (
+            <span className="bg-muted px-2 py-1 rounded text-xs">Filtr: {currentFilter.label}</span>
           )}
-          
-          {currentFilter.value !== 'all' && (
-            <span className="bg-muted px-2 py-1 rounded text-xs">
-              Filtr: {currentFilter.label}
-            </span>
-          )}
-          
-          {currentSort.value !== 'created_at_desc' && (
-            <span className="bg-muted px-2 py-1 rounded text-xs">
-              Sortuj: {currentSort.label}
-            </span>
+
+          {currentSort.value !== "created_at_desc" && (
+            <span className="bg-muted px-2 py-1 rounded text-xs">Sortuj: {currentSort.label}</span>
           )}
         </div>
       </div>
     </div>
   );
-};
+});

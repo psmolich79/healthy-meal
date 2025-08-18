@@ -3,10 +3,10 @@ import type { Rating, RatingType, UpsertRatingDto } from "../../types";
 
 /**
  * Service for managing recipe ratings.
- * 
+ *
  * This service provides a clean interface for all rating-related database operations,
  * including creating, updating, and deleting ratings with proper validation.
- * 
+ *
  * @example
  * ```typescript
  * const ratingService = new RatingService(supabaseClient);
@@ -23,11 +23,7 @@ export class RatingService {
    * @param rating - The rating value (up/down)
    * @returns Promise resolving to the created rating or null if creation failed
    */
-  async createRating(
-    recipeId: string, 
-    userId: string, 
-    rating: RatingType
-  ): Promise<UpsertRatingDto | null> {
+  async createRating(recipeId: string, userId: string, rating: RatingType): Promise<UpsertRatingDto | null> {
     try {
       // Check if rating already exists
       const existingRating = await this.getRating(recipeId, userId);
@@ -43,7 +39,7 @@ export class RatingService {
           user_id: userId,
           rating,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -67,11 +63,7 @@ export class RatingService {
    * @param rating - The new rating value (up/down)
    * @returns Promise resolving to the updated rating or null if update failed
    */
-  async updateRating(
-    recipeId: string, 
-    userId: string, 
-    rating: RatingType
-  ): Promise<UpsertRatingDto | null> {
+  async updateRating(recipeId: string, userId: string, rating: RatingType): Promise<UpsertRatingDto | null> {
     try {
       // Check if rating exists
       const existingRating = await this.getRating(recipeId, userId);
@@ -84,7 +76,7 @@ export class RatingService {
         .from("ratings")
         .update({
           rating,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("recipe_id", recipeId)
         .eq("user_id", userId)
@@ -110,11 +102,7 @@ export class RatingService {
    * @param rating - The rating value (1 for up, -1 for down)
    * @returns Promise resolving to the rating result or null if operation failed
    */
-  async addRating(
-    recipeId: string, 
-    userId: string, 
-    rating: RatingType
-  ): Promise<{ rating: RatingType } | null> {
+  async addRating(recipeId: string, userId: string, rating: RatingType): Promise<{ rating: RatingType } | null> {
     try {
       // Use upsert to create or update rating
       const { data, error } = await this.supabase
@@ -124,7 +112,7 @@ export class RatingService {
           user_id: userId,
           rating,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -155,11 +143,7 @@ export class RatingService {
       }
 
       // Delete rating
-      const { error } = await this.supabase
-        .from("ratings")
-        .delete()
-        .eq("recipe_id", recipeId)
-        .eq("user_id", userId);
+      const { error } = await this.supabase.from("ratings").delete().eq("recipe_id", recipeId).eq("user_id", userId);
 
       if (error) {
         throw error;
@@ -209,11 +193,7 @@ export class RatingService {
    * @param rating - The rating value (up/down)
    * @returns Promise resolving to the upserted rating
    */
-  async upsertRating(
-    recipeId: string, 
-    userId: string, 
-    rating: RatingType
-  ): Promise<UpsertRatingDto> {
+  async upsertRating(recipeId: string, userId: string, rating: RatingType): Promise<UpsertRatingDto> {
     try {
       // Try to update first
       const updatedRating = await this.updateRating(recipeId, userId, rating);
@@ -234,8 +214,6 @@ export class RatingService {
     }
   }
 
-
-
   /**
    * Transforms a Rating to UpsertRatingDto with computed fields.
    * @param rating - The rating data from database
@@ -244,7 +222,7 @@ export class RatingService {
   private transformToUpsertRatingDto(rating: Rating): UpsertRatingDto {
     return {
       ...rating,
-      can_regenerate: rating.rating === -1 // Allow regeneration for negative ratings (-1 = down)
+      can_regenerate: rating.rating === -1, // Allow regeneration for negative ratings (-1 = down)
     };
   }
 }

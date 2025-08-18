@@ -1,11 +1,11 @@
-import React from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-import { DietSection } from './DietSection';
-import { CuisineSection } from './CuisineSection';
-import { AllergiesSection } from './AllergiesSection';
-import { DIET_PREFERENCES, CUISINE_PREFERENCES, ALLERGY_PREFERENCES } from '@/data/preferences';
+import React from "react";
+// ChevronDown import removed - not used
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { DietSection } from "./DietSection";
+import { CuisineSection } from "./CuisineSection";
+import { AllergiesSection } from "./AllergiesSection";
+import { DIET_PREFERENCES, CUISINE_PREFERENCES, ALLERGY_PREFERENCES } from "@/data/preferences";
 
 interface PreferencesAccordionProps {
   preferences: string[];
@@ -18,20 +18,14 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
   preferences,
   onPreferencesChange,
   isLoading,
-  className = ''
+  className = "",
 }) => {
   // Count preferences by category
-  const dietCount = preferences.filter(pref => 
-    DIET_PREFERENCES.some(diet => diet.id === pref)
-  ).length;
+  const dietCount = preferences.filter((pref) => DIET_PREFERENCES.some((diet) => diet.id === pref)).length;
 
-  const cuisineCount = preferences.filter(pref => 
-    CUISINE_PREFERENCES.some(cuisine => cuisine.id === pref)
-  ).length;
+  const cuisineCount = preferences.filter((pref) => CUISINE_PREFERENCES.some((cuisine) => cuisine.id === pref)).length;
 
-  const allergyCount = preferences.filter(pref => 
-    ALLERGY_PREFERENCES.some(allergy => allergy.id === pref)
-  ).length;
+  const allergyCount = preferences.filter((pref) => ALLERGY_PREFERENCES.some((allergy) => allergy.id === pref)).length;
 
   const getTriggerContent = (title: string, count: number, icon: string) => (
     <div className="flex items-center justify-between w-full">
@@ -55,8 +49,7 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Preferencje żywieniowe</h2>
         <p className="text-sm text-muted-foreground">
-          Wybierz swoje preferencje, aby otrzymywać spersonalizowane przepisy. 
-          Zmiany są automatycznie zapisywane.
+          Wybierz swoje preferencje, aby otrzymywać spersonalizowane przepisy. Zmiany są automatycznie zapisywane.
         </p>
       </div>
 
@@ -72,7 +65,7 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
         {/* Diet Section */}
         <AccordionItem value="diet" className="border rounded-lg px-4">
           <AccordionTrigger className="hover:no-underline py-4">
-            {getTriggerContent('Dieta', dietCount, '🥬')}
+            {getTriggerContent("Dieta", dietCount, "🥬")}
           </AccordionTrigger>
           <AccordionContent className="pb-4">
             <DietSection
@@ -87,7 +80,7 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
         {/* Cuisine Section */}
         <AccordionItem value="cuisine" className="border rounded-lg px-4">
           <AccordionTrigger className="hover:no-underline py-4">
-            {getTriggerContent('Kuchnia', cuisineCount, '🌍')}
+            {getTriggerContent("Kuchnia", cuisineCount, "🌍")}
           </AccordionTrigger>
           <AccordionContent className="pb-4">
             <CuisineSection
@@ -102,7 +95,7 @@ export const PreferencesAccordion: React.FC<PreferencesAccordionProps> = ({
         {/* Allergies Section */}
         <AccordionItem value="allergies" className="border rounded-lg px-4">
           <AccordionTrigger className="hover:no-underline py-4">
-            {getTriggerContent('Alergie i ograniczenia', allergyCount, '⚠️')}
+            {getTriggerContent("Alergie i ograniczenia", allergyCount, "⚠️")}
           </AccordionTrigger>
           <AccordionContent className="pb-4">
             <AllergiesSection

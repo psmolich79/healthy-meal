@@ -1,14 +1,12 @@
-import React from 'react';
-import { AlertTriangle, Brain, Shield } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React from "react";
+import { AlertTriangle, Brain, Shield } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AIDisclaimerProps {
   className?: string;
 }
 
-export const AIDisclaimer: React.FC<AIDisclaimerProps> = ({
-  className = ''
-}) => {
+export const AIDisclaimer: React.FC<AIDisclaimerProps> = ({ className = "" }) => {
   return (
     <Alert variant="destructive" className={`border-amber-200 bg-amber-50 ${className}`}>
       <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -22,8 +20,8 @@ export const AIDisclaimer: React.FC<AIDisclaimerProps> = ({
                 Ten przepis został wygenerowany przez sztuczną inteligencję po polsku
               </p>
               <p className="text-xs mt-1">
-                AI stara się tworzyć bezpieczne i smaczne przepisy w języku polskim, ale zawsze sprawdź składniki 
-                i instrukcje przed przygotowaniem posiłku.
+                AI stara się tworzyć bezpieczne i smaczne przepisy w języku polskim, ale zawsze sprawdź składniki i
+                instrukcje przed przygotowaniem posiłku.
               </p>
             </div>
           </div>
@@ -47,8 +45,8 @@ export const AIDisclaimer: React.FC<AIDisclaimerProps> = ({
           {/* Additional Info */}
           <div className="text-xs text-amber-700 bg-amber-100 rounded p-2">
             <p>
-              💡 <strong>Pamiętaj:</strong> AI uwzględnia Twoje preferencje żywieniowe, 
-              ale nie zastępuje profesjonalnej porady dietetycznej lub medycznej.
+              💡 <strong>Pamiętaj:</strong> AI uwzględnia Twoje preferencje żywieniowe, ale nie zastępuje profesjonalnej
+              porady dietetycznej lub medycznej.
             </p>
           </div>
         </div>

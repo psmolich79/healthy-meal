@@ -1,7 +1,7 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatTokensData } from '@/utils/chart-utils';
-import type { DailyUsageDto } from '@/types';
+import React from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { formatTokensData } from "@/utils/chart-utils";
+import type { DailyUsageDto } from "@/types";
 
 interface TokensChartProps {
   data: DailyUsageDto[];

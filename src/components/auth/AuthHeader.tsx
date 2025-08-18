@@ -1,6 +1,6 @@
-import React from 'react';
-import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { AuthFormType } from '@/types';
+import React from "react";
+import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { AuthFormType } from "@/types";
 
 interface AuthHeaderProps {
   formType: AuthFormType;
@@ -12,32 +12,28 @@ interface AuthHeaderProps {
  * Header component for authentication forms.
  * Displays appropriate title and description based on form type.
  */
-export const AuthHeader: React.FC<AuthHeaderProps> = ({ 
-  formType, 
-  title, 
-  description 
-}) => {
+export const AuthHeader: React.FC<AuthHeaderProps> = ({ formType, title, description }) => {
   const getDefaultContent = () => {
     switch (formType) {
-      case 'login':
+      case "login":
         return {
-          title: 'Witaj ponownie',
-          description: 'Zaloguj się do swojego konta, aby kontynuować'
+          title: "Witaj ponownie",
+          description: "Zaloguj się do swojego konta, aby kontynuować",
         };
-      case 'register':
+      case "register":
         return {
-          title: 'Utwórz konto',
-          description: 'Zarejestruj się, aby rozpocząć korzystanie z aplikacji'
+          title: "Utwórz konto",
+          description: "Zarejestruj się, aby rozpocząć korzystanie z aplikacji",
         };
-      case 'reset-password':
+      case "reset-password":
         return {
-          title: 'Resetuj hasło',
-          description: 'Wprowadź swój email, aby otrzymać link do resetowania hasła'
+          title: "Resetuj hasło",
+          description: "Wprowadź swój email, aby otrzymać link do resetowania hasła",
         };
       default:
         return {
-          title: 'Uwierzytelnianie',
-          description: 'Zaloguj się lub zarejestruj'
+          title: "Uwierzytelnianie",
+          description: "Zaloguj się lub zarejestruj",
         };
     }
   };

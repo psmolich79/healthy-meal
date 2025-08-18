@@ -5,16 +5,16 @@ import type { ProfileDto, UpdatedProfileDto, DeletedProfileDto } from "../../../
 
 /**
  * API endpoint for managing the current user's profile.
- * 
+ *
  * This endpoint provides three operations:
  * - GET: Retrieve the current user's profile information
  * - PUT: Update the user's preferences
  * - DELETE: Schedule the profile for deletion
- * 
+ *
  * All operations require authentication via JWT token in the Authorization header.
  * The endpoint uses Row-Level Security (RLS) policies to ensure users can only
  * access and modify their own profile data.
- * 
+ *
  * @see {@link ProfileService} for business logic implementation
  * @see {@link ProfileDto}, {@link UpdatedProfileDto}, {@link DeletedProfileDto} for response types
  */
@@ -24,7 +24,7 @@ export const prerender = false;
 
 // Zod schema for validating PUT request body
 const updateProfileSchema = z.object({
-  preferences: z.array(z.string()).min(1, "At least one preference is required")
+  preferences: z.array(z.string()).min(1, "At least one preference is required"),
 });
 
 /**
@@ -37,14 +37,14 @@ export const GET: APIRoute = async ({ locals, request }) => {
     console.log("GET /api/profiles/me - locals.user:", locals.user);
     console.log("GET /api/profiles/me - locals.supabase:", !!locals.supabase);
     console.log("GET /api/profiles/me - auth header:", request.headers.get("authorization") ? "Present" : "Missing");
-    
+
     // Get user and supabase client from middleware
     const { user, supabase } = locals;
-    
+
     if (!user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -57,12 +57,12 @@ export const GET: APIRoute = async ({ locals, request }) => {
       try {
         // Use ProfileService to create profile
         profile = await profileService.createProfile(user.id, []);
-        console.log('Created new profile for existing user:', user.id);
+        console.log("Created new profile for existing user:", user.id);
       } catch (error) {
-        console.error('Error creating profile:', error);
+        console.error("Error creating profile:", error);
         return new Response(JSON.stringify({ error: "Failed to create profile" }), {
           status: 500,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
       }
     }
@@ -73,19 +73,18 @@ export const GET: APIRoute = async ({ locals, request }) => {
       preferences: profile.preferences,
       status: profile.status,
       created_at: profile.created_at,
-      updated_at: profile.updated_at
+      updated_at: profile.updated_at,
     };
 
     return new Response(JSON.stringify(profileDto), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error) {
     console.error("Error in GET /api/profiles/me:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
 };
@@ -98,11 +97,11 @@ export const PUT: APIRoute = async ({ request, locals }) => {
   try {
     // Get user and supabase client from middleware
     const { user, supabase } = locals;
-    
+
     if (!user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -113,20 +112,23 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
     // Validate request body using Zod
     const validationResult = updateProfileSchema.safeParse(body);
     if (!validationResult.success) {
-      return new Response(JSON.stringify({ 
-        error: "Validation failed", 
-        details: validationResult.error.errors 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Validation failed",
+          details: validationResult.error.errors,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Create ProfileService instance and update preferences
@@ -136,7 +138,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     if (!updatedProfile) {
       return new Response(JSON.stringify({ error: "Profile not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -145,19 +147,18 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       user_id: updatedProfile.user_id,
       preferences: updatedProfile.preferences,
       status: updatedProfile.status,
-      updated_at: updatedProfile.updated_at
+      updated_at: updatedProfile.updated_at,
     };
 
     return new Response(JSON.stringify(updatedProfileDto), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error) {
     console.error("Error in PUT /api/profiles/me:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
 };
@@ -170,11 +171,11 @@ export const DELETE: APIRoute = async ({ locals }) => {
   try {
     // Get user and supabase client from middleware
     const { user, supabase } = locals;
-    
+
     if (!user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -185,7 +186,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     if (!profile) {
       return new Response(JSON.stringify({ error: "Profile not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -193,19 +194,18 @@ export const DELETE: APIRoute = async ({ locals }) => {
     const deletedProfileDto: DeletedProfileDto = {
       message: "Profile scheduled for deletion",
       status: profile.status,
-      deletion_scheduled_at: profile.status_changed_at!
+      deletion_scheduled_at: profile.status_changed_at!,
     };
 
     return new Response(JSON.stringify(deletedProfileDto), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error) {
     console.error("Error in DELETE /api/profiles/me:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
 };

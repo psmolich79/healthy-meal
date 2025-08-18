@@ -6,10 +6,10 @@ import type { RegeneratedRecipeDto } from "../../../../types";
 
 /**
  * API endpoint for regenerating a recipe.
- * 
+ *
  * This endpoint allows users to regenerate a recipe based on the original query
  * and user preferences. It creates a new recipe with a reference to the original.
- * 
+ *
  * @see {@link RecipeService} for business logic implementation
  * @see {@link AiService} for AI generation
  * @see {@link RegeneratedRecipeDto} for response type
@@ -21,7 +21,7 @@ export const prerender = false;
 /**
  * POST /api/recipes/{id}/regenerate
  * Regenerates a recipe based on the original query and user preferences.
- * 
+ *
  * @param params - URL parameters including recipe ID
  * @param locals - Local context including user and supabase client
  * @returns Regenerated recipe or error response
@@ -30,24 +30,27 @@ export const POST: APIRoute = async ({ params, locals }) => {
   try {
     // Get user and supabase client from middleware
     const { user, supabase } = locals;
-    
+
     if (!user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
     // Validate recipe ID parameter
     const recipeIdValidation = recipeIdSchema.safeParse(params.id);
     if (!recipeIdValidation.success) {
-      return new Response(JSON.stringify({ 
-        error: "Invalid recipe ID",
-        details: recipeIdValidation.error.errors 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Invalid recipe ID",
+          details: recipeIdValidation.error.errors,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     const recipeId = recipeIdValidation.data;
@@ -61,7 +64,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
     if (!originalRecipe) {
       return new Response(JSON.stringify({ error: "Recipe not found or access denied" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -70,7 +73,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
     if (!userProfile) {
       return new Response(JSON.stringify({ error: "User profile not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -90,12 +93,12 @@ export const POST: APIRoute = async ({ params, locals }) => {
         content: {
           ingredients: aiResult.ingredients,
           shopping_list: aiResult.shopping_list,
-          instructions: aiResult.instructions
+          instructions: aiResult.instructions,
         },
         query: originalRecipe.query,
         preferences: userProfile.preferences,
         is_visible: true,
-        user_id: user.id
+        user_id: user.id,
       })
       .select()
       .single();
@@ -123,25 +126,24 @@ export const POST: APIRoute = async ({ params, locals }) => {
         model: aiResult.aiGeneration.model || "gpt-4",
         input_tokens: aiResult.aiGeneration.input_tokens,
         output_tokens: aiResult.aiGeneration.output_tokens,
-        cost: aiResult.aiGeneration.cost
-      }
+        cost: aiResult.aiGeneration.cost,
+      },
     };
 
     return new Response(JSON.stringify(regeneratedRecipeDto), {
       status: 201,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error) {
     console.error("Error in POST /api/recipes/[id]/regenerate:", error);
-    
+
     // Handle specific error types
     if (error instanceof Error) {
       // Check for rate limiting
       if (error.message.includes("Rate limit exceeded")) {
         return new Response(JSON.stringify({ error: "Too many regeneration requests" }), {
           status: 429,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
       }
 
@@ -149,14 +151,14 @@ export const POST: APIRoute = async ({ params, locals }) => {
       if (error.message.includes("JWT")) {
         return new Response(JSON.stringify({ error: "Invalid authentication token" }), {
           status: 401,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
       }
-      
+
       if (error.message.includes("permission") || error.message.includes("RLS")) {
         return new Response(JSON.stringify({ error: "Access denied" }), {
           status: 403,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
       }
 
@@ -164,14 +166,14 @@ export const POST: APIRoute = async ({ params, locals }) => {
       if (error.message.includes("Recipe generation failed")) {
         return new Response(JSON.stringify({ error: "Recipe regeneration failed" }), {
           status: 500,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
       }
     }
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
 };

@@ -1,25 +1,21 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { RecipeListHeader } from './RecipeListHeader';
-import { RecipeListControls } from './RecipeListControls';
-import { RecipeGrid } from './RecipeGrid';
-import { Pagination } from './Pagination';
-import { EmptyState } from './EmptyState';
-import { useRecipeList } from '@/hooks/useRecipeList';
+import React, { useCallback } from "react";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { RecipeListHeader } from "./RecipeListHeader";
+import { RecipeListControls } from "./RecipeListControls";
+import { RecipeGrid } from "./RecipeGrid";
+import { Pagination } from "./Pagination";
+import { EmptyState } from "./EmptyState";
+import { useRecipeList } from "@/hooks/useRecipeList";
 
 interface RecipeListViewProps {
-  initialRecipes?: any[];
   className?: string;
 }
 
-export const RecipeListView: React.FC<RecipeListViewProps> = ({
-  initialRecipes = [],
-  className = ''
-}) => {
+export const RecipeListView: React.FC<RecipeListViewProps> = React.memo(({ className = "" }) => {
   const {
     recipes,
     filteredRecipes,
@@ -41,26 +37,26 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
     changePage,
     deleteRecipe,
     clearSearch,
-    clearError
+    clearError,
   } = useRecipeList();
 
-  const handleRecipeClick = (recipeId: string) => {
+  const handleRecipeClick = useCallback((recipeId: string) => {
     window.location.href = `/recipes/${recipeId}`;
-  };
+  }, []);
 
-  const handleRecipeDelete = async (recipeId: string) => {
+  const handleRecipeDelete = useCallback(async (recipeId: string) => {
     await deleteRecipe(recipeId);
-  };
+  }, [deleteRecipe]);
+
+  const handleGenerateRecipe = useCallback(() => {
+    window.location.href = "/recipes/generate";
+  }, []);
 
   // Show loading spinner while loading recipes
   if (isLoading && !hasRecipes) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <LoadingSpinner
-          isVisible={true}
-          status="Ładowanie przepisów..."
-          size="lg"
-        />
+        <LoadingSpinner isVisible={true} status="Ładowanie przepisów..." size="lg" />
       </div>
     );
   }
@@ -74,10 +70,7 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
               <span>{error}</span>
-              <button
-                onClick={clearError}
-                className="text-xs underline hover:no-underline"
-              >
+              <button onClick={clearError} className="text-xs underline hover:no-underline">
                 Zamknij
               </button>
             </AlertDescription>
@@ -113,11 +106,7 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
             {/* Loading State for Search */}
             {isSearching && (
               <div className="flex items-center justify-center py-8">
-                <LoadingSpinner
-                  isVisible={true}
-                  status="Wyszukiwanie przepisów..."
-                  size="md"
-                />
+                <LoadingSpinner isVisible={true} status="Wyszukiwanie przepisów..." size="md" />
               </div>
             )}
 
@@ -138,7 +127,7 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
               />
             )}
 
-            {!isSearching && hasRecipes && !hasFilteredRecipes && !isSearchActive && currentFilter.value !== 'all' && (
+            {!isSearching && hasRecipes && !hasFilteredRecipes && !isSearchActive && currentFilter.value !== "all" && (
               <EmptyState
                 message={`Nie znaleziono przepisów dla filtru "${currentFilter.label}". Spróbuj zmienić filtr lub wygenerować nowe przepisy.`}
                 actionLabel="Pokaż wszystkie przepisy"
@@ -174,11 +163,9 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
         {/* Quick Actions */}
         {hasRecipes && (
           <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Chcesz więcej przepisów?
-            </p>
+            <p className="text-sm text-muted-foreground">Chcesz więcej przepisów?</p>
             <button
-              onClick={() => window.location.href = '/recipes/generate'}
+              onClick={handleGenerateRecipe}
               className="text-sm text-primary hover:underline"
             >
               Wygeneruj nowy przepis →
@@ -188,4 +175,4 @@ export const RecipeListView: React.FC<RecipeListViewProps> = ({
       </div>
     </ErrorBoundary>
   );
-};
+});

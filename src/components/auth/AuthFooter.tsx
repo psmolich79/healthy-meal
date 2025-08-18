@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import type { AuthFormType } from '@/types';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import type { AuthFormType } from "@/types";
 
 interface AuthFooterProps {
   formType: AuthFormType;
@@ -12,43 +12,36 @@ interface AuthFooterProps {
  * Footer component for authentication forms.
  * Provides navigation links to switch between different auth screens.
  */
-export const AuthFooter: React.FC<AuthFooterProps> = ({ 
-  formType, 
-  onFormSwitch 
-}) => {
+export const AuthFooter: React.FC<AuthFooterProps> = ({ formType, onFormSwitch }) => {
   const getFooterContent = () => {
     switch (formType) {
-      case 'login':
+      case "login":
         return {
-          question: 'Nie masz jeszcze konta?',
-          action: 'Zarejestruj się',
-          switchTo: 'register' as const,
-          additionalLinks: [
-            { text: 'Zapomniałeś hasła?', action: 'reset-password' as const }
-          ]
+          question: "Nie masz jeszcze konta?",
+          action: "Zarejestruj się",
+          switchTo: "register" as const,
+          additionalLinks: [{ text: "Zapomniałeś hasła?", action: "reset-password" as const }],
         };
-      case 'register':
+      case "register":
         return {
-          question: 'Masz już konto?',
-          action: 'Zaloguj się',
-          switchTo: 'login' as const,
-          additionalLinks: []
+          question: "Masz już konto?",
+          action: "Zaloguj się",
+          switchTo: "login" as const,
+          additionalLinks: [],
         };
-      case 'reset-password':
+      case "reset-password":
         return {
-          question: 'Pamiętasz hasło?',
-          action: 'Zaloguj się',
-          switchTo: 'login' as const,
-          additionalLinks: [
-            { text: 'Nie masz konta?', action: 'register' as const }
-          ]
+          question: "Pamiętasz hasło?",
+          action: "Zaloguj się",
+          switchTo: "login" as const,
+          additionalLinks: [{ text: "Nie masz konta?", action: "register" as const }],
         };
       default:
         return {
-          question: 'Masz już konto?',
-          action: 'Zaloguj się',
-          switchTo: 'login' as const,
-          additionalLinks: []
+          question: "Masz już konto?",
+          action: "Zaloguj się",
+          switchTo: "login" as const,
+          additionalLinks: [],
         };
     }
   };
@@ -59,12 +52,10 @@ export const AuthFooter: React.FC<AuthFooterProps> = ({
     <div className="space-y-4 pt-6">
       {/* Separator */}
       <Separator className="my-4" />
-      
+
       {/* Main Action */}
       <div className="text-center">
-        <span className="text-sm text-slate-600 dark:text-slate-400">
-          {question}{' '}
-        </span>
+        <span className="text-sm text-slate-600 dark:text-slate-400">{question} </span>
         <Button
           variant="link"
           onClick={() => onFormSwitch(switchTo)}
@@ -94,9 +85,9 @@ export const AuthFooter: React.FC<AuthFooterProps> = ({
       {/* Help Section */}
       <div className="text-center pt-4">
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Potrzebujesz pomocy?{' '}
-          <a 
-            href="/support" 
+          Potrzebujesz pomocy?{" "}
+          <a
+            href="/support"
             className="text-blue-600 hover:text-blue-700 underline"
             target="_blank"
             rel="noopener noreferrer"

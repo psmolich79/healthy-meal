@@ -1,26 +1,23 @@
-import React from 'react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { RecipeHeader } from './RecipeHeader';
-import { IngredientsSection } from './IngredientsSection';
-import { ShoppingListSection } from './ShoppingListSection';
-import { InstructionsSection } from './InstructionsSection';
-import { RecipeActions } from './RecipeActions';
-import { AIDisclaimer } from './AIDisclaimer';
-import { useRecipeDetails } from '@/hooks/useRecipeDetails';
-import type { RatingType } from '@/types';
+import React from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { RecipeHeader } from "./RecipeHeader";
+import { IngredientsSection } from "./IngredientsSection";
+import { ShoppingListSection } from "./ShoppingListSection";
+import { InstructionsSection } from "./InstructionsSection";
+import { RecipeActions } from "./RecipeActions";
+import { AIDisclaimer } from "./AIDisclaimer";
+import { useRecipeDetails } from "@/hooks/useRecipeDetails";
+import type { RatingType } from "@/types";
 
 interface RecipeDetailsViewProps {
   recipeId: string;
   className?: string;
 }
 
-export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
-  recipeId,
-  className = ''
-}) => {
+export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({ recipeId, className = "" }) => {
   const {
     recipe,
     isLoading,
@@ -32,18 +29,14 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
     saveRecipe,
     rateRecipe,
     regenerateRecipe,
-    clearError
+    clearError,
   } = useRecipeDetails(recipeId);
 
   // Show loading spinner while loading recipe
   if (isLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <LoadingSpinner
-          isVisible={true}
-          status="Ładowanie przepisu..."
-          size="lg"
-        />
+        <LoadingSpinner isVisible={true} status="Ładowanie przepisu..." size="lg" />
       </div>
     );
   }
@@ -56,10 +49,7 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>{error}</span>
-            <button
-              onClick={clearError}
-              className="text-xs underline hover:no-underline"
-            >
+            <button onClick={clearError} className="text-xs underline hover:no-underline">
               Zamknij
             </button>
           </AlertDescription>
@@ -78,9 +68,7 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
           </div>
           <div className="space-y-2">
             <h3 className="font-medium">Przepis nie został znaleziony</h3>
-            <p className="text-sm text-muted-foreground">
-              Ten przepis może nie istnieć lub został usunięty.
-            </p>
+            <p className="text-sm text-muted-foreground">Ten przepis może nie istnieć lub został usunięty.</p>
           </div>
         </div>
       </div>
@@ -116,7 +104,7 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
         {/* Main Recipe Card */}
         <div className="bg-card border rounded-lg overflow-hidden">
           <RecipeHeader recipe={recipe} />
-          
+
           <div className="p-6 space-y-6">
             {/* Recipe Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -148,7 +136,7 @@ export const RecipeDetailsView: React.FC<RecipeDetailsViewProps> = ({
         {/* Back to Recipes Link */}
         <div className="text-center">
           <button
-            onClick={() => window.location.href = '/recipes'}
+            onClick={() => (window.location.href = "/recipes")}
             className="text-sm text-muted-foreground hover:text-foreground underline"
           >
             ← Powrót do listy przepisów

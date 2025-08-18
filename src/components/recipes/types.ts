@@ -1,4 +1,4 @@
-import type { RecipeListItemDto, PaginatedRecipesDto, GeneratedRecipeDto } from "@/types";
+import type { RecipeListItemDto, GeneratedRecipeDto } from "@/types";
 
 // #region Component Props Types
 
@@ -116,7 +116,7 @@ export interface GenerateButtonProps {
   disabled: boolean;
   isLoading: boolean;
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
 }
 
 export interface RecipeListState {
@@ -170,9 +170,9 @@ export interface FilterOption {
   description: string;
 }
 
-export type SortType = 'created_at_desc' | 'created_at_asc' | 'title_asc' | 'title_desc' | 'rating_desc';
+export type SortType = "created_at_desc" | "created_at_asc" | "title_asc" | "title_desc" | "rating_desc";
 
-export type FilterType = 'all' | 'visible' | 'hidden' | 'rated' | 'unrated';
+export type FilterType = "all" | "visible" | "hidden" | "rated" | "unrated";
 
 // #endregion
 
@@ -190,22 +190,22 @@ export interface SearchState {
 // #region Action Types
 
 export interface RecipeListAction {
-  type: 'set_recipes' | 'set_search' | 'set_sort' | 'set_filter' | 'set_page' | 'delete_recipe';
-  payload: any;
+  type: "set_recipes" | "set_search" | "set_sort" | "set_filter" | "set_page" | "delete_recipe";
+  payload: RecipeListItemDto[] | string | SortOption | FilterOption | number;
 }
 
 export interface SearchAction {
-  type: 'search_start' | 'search_success' | 'search_error' | 'search_clear';
-  payload?: any;
+  type: "search_start" | "search_success" | "search_error" | "search_clear";
+  payload?: RecipeListItemDto[] | string;
 }
 
 export interface SortAction {
-  type: 'sort_change';
+  type: "sort_change";
   payload: SortOption;
 }
 
 export interface FilterAction {
-  type: 'filter_change';
+  type: "filter_change";
   payload: FilterOption;
 }
 

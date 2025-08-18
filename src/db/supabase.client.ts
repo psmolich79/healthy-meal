@@ -18,8 +18,8 @@ export const supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKe
     storage: cookieStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false
-  }
+    detectSessionInUrl: false,
+  },
 });
 
 // Export the SupabaseClient type for use in services

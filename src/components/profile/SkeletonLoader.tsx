@@ -1,60 +1,53 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export interface SkeletonLoaderProps {
   className?: string;
   count?: number;
-  height?: 'sm' | 'md' | 'lg';
-  width?: 'full' | 'auto' | 'sm' | 'md' | 'lg';
+  height?: "sm" | "md" | "lg";
+  width?: "full" | "auto" | "sm" | "md" | "lg";
 }
 
-export const SkeletonLoader = React.memo<SkeletonLoaderProps>(({
-  className,
-  count = 1,
-  height = 'md',
-  width = 'full'
-}) => {
-  const heightClasses = {
-    sm: 'h-4',
-    md: 'h-6',
-    lg: 'h-8'
-  };
+export const SkeletonLoader = React.memo<SkeletonLoaderProps>(
+  ({ className, count = 1, height = "md", width = "full" }) => {
+    const heightClasses = {
+      sm: "h-4",
+      md: "h-6",
+      lg: "h-8",
+    };
 
-  const widthClasses = {
-    full: 'w-full',
-    auto: 'w-auto',
-    sm: 'w-16',
-    md: 'w-32',
-    lg: 'w-48'
-  };
+    const widthClasses = {
+      full: "w-full",
+      auto: "w-auto",
+      sm: "w-16",
+      md: "w-32",
+      lg: "w-48",
+    };
 
-  const skeletonItems = Array.from({ length: count }, (_, index) => (
-    <motion.div
-      key={index}
-      className={cn(
-        'bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
-        heightClasses[height],
-        widthClasses[width],
-        className
-      )}
-      initial={{ opacity: 0.6 }}
-      animate={{ opacity: [0.6, 1, 0.6] }}
-      transition={{
-        duration: 1.5,
-        repeat: Infinity,
-        ease: 'easeInOut',
-        delay: index * 0.1
-      }}
-    />
-  ));
+    const skeletonItems = Array.from({ length: count }, (_, index) => (
+      <motion.div
+        key={index}
+        className={cn(
+          "bg-gray-200 dark:bg-gray-700 rounded animate-pulse",
+          heightClasses[height],
+          widthClasses[width],
+          className
+        )}
+        initial={{ opacity: 0.6 }}
+        animate={{ opacity: [0.6, 1, 0.6] }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: index * 0.1,
+        }}
+      />
+    ));
 
-  return (
-    <div className="space-y-3">
-      {skeletonItems}
-    </div>
-  );
-});
+    return <div className="space-y-3">{skeletonItems}</div>;
+  }
+);
 
 export const PreferenceSkeleton = React.memo(() => (
   <div className="space-y-4">
@@ -91,7 +84,7 @@ export const ProfileHeaderSkeleton = React.memo(() => (
   <div className="text-center space-y-4">
     <SkeletonLoader height="lg" width="lg" className="mx-auto" />
     <SkeletonLoader height="md" width="full" className="max-w-2xl mx-auto" />
-    
+
     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
       {Array.from({ length: 3 }, (_, index) => (
         <div key={index} className="flex items-center gap-2">
