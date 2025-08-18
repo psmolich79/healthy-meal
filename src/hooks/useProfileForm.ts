@@ -14,6 +14,13 @@ interface ProfileFormState {
   isApiKeyActive: boolean;
   apiKeyLastUsedAt: string | null;
   apiKeyUsageCount: number;
+  // API Usage limits
+  apiUsageLimits: {
+    daily_limit: number;
+    current_usage: number;
+    remaining_usage: number;
+    reset_time: string;
+  } | null;
 }
 
 interface AccordionState {
@@ -38,6 +45,8 @@ export const useProfileForm = () => {
     isApiKeyActive: false,
     apiKeyLastUsedAt: null,
     apiKeyUsageCount: 0,
+    // API Usage limits
+    apiUsageLimits: null,
   });
 
   const [accordionState, setAccordionState] = useState<AccordionState>({
@@ -109,17 +118,36 @@ export const useProfileForm = () => {
         console.log("Could not fetch API key info:", error);
       }
 
+      // Fetch API usage limits
+      let apiUsageLimits = null;
+      try {
+        const apiUsageResponse = await fetch("/api/profiles/api-usage", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          credentials: "include",
+        });
+        if (apiUsageResponse.ok) {
+          const usageData = await apiUsageResponse.json();
+          apiUsageLimits = usageData.limits;
+        }
+      } catch (error) {
+        console.log("Could not fetch API usage limits:", error);
+      }
+
       setState((prev) => ({
         ...prev,
         isLoading: false,
         preferences,
         originalPreferences: [...preferences],
         profile,
-        // API Key info
-        apiKey: apiKeyInfo?.data?.api_key || null,
+        // API Key info - use has_api_key flag instead of trying to get the actual key
+        apiKey: apiKeyInfo?.has_api_key ? "••••••••••••••••••••••••••••••••••••••••••••••••••" : null,
         isApiKeyActive: apiKeyInfo?.data?.is_active || false,
         apiKeyLastUsedAt: apiKeyInfo?.data?.last_used_at || null,
         apiKeyUsageCount: apiKeyInfo?.data?.usage_count || 0,
+        // API Usage limits
+        apiUsageLimits,
       }));
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -308,9 +336,38 @@ export const useProfileForm = () => {
         error: sessionError,
       } = await supabaseClient.auth.getSession();
 
+      console.log("Session check in updateApiKey:", { 
+        hasSession: !!session, 
+        hasUser: !!session?.user, 
+        userId: session?.user?.id,
+        accessToken: session?.access_token ? `${session.access_token.substring(0, 20)}...` : 'none',
+        accessTokenLength: session?.access_token?.length || 0,
+        sessionError: sessionError?.message 
+      });
+
+      // Debug: check if access_token looks like a valid JWT
+      if (session?.access_token) {
+        const tokenParts = session.access_token.split('.');
+        console.log("Token analysis:", {
+          parts: tokenParts.length,
+          isJWT: tokenParts.length === 3,
+          firstPartLength: tokenParts[0]?.length || 0,
+          secondPartLength: tokenParts[1]?.length || 0,
+          thirdPartLength: tokenParts[2]?.length || 0
+        });
+      }
+
       if (sessionError || !session) {
         throw new Error("Musisz być zalogowany");
       }
+
+      console.log("Sending request with token:", {
+        url: "/api/profiles/api-key",
+        method: "PUT",
+        hasAuthHeader: !!session.access_token,
+        authHeaderValue: `Bearer ${session.access_token}`,
+        tokenLength: session.access_token?.length || 0
+      });
 
       const response = await fetch("/api/profiles/api-key", {
         method: "PUT",
@@ -332,17 +389,17 @@ export const useProfileForm = () => {
 
       const result = await response.json();
 
-      // Update local state immediately
+      // Update local state immediately with masked API key
       setState((prev) => ({
         ...prev,
         isSaving: false,
-        apiKey: apiKey,
+        apiKey: "••••••••••••••••••••••••••••••••••••••••••••••••••",
         isApiKeyActive: true,
         apiKeyLastUsedAt: null,
         apiKeyUsageCount: 0,
       }));
 
-      // Refresh profile data to get updated API key info from database
+      // Refresh profile data to get updated API key info and limits from database
       await fetchProfile();
 
       return result;
@@ -389,6 +446,7 @@ export const useProfileForm = () => {
         isApiKeyActive: false,
         apiKeyLastUsedAt: null,
         apiKeyUsageCount: 0,
+        apiUsageLimits: null, // Reset limits when API key is deleted
       }));
     } catch (error) {
       console.error("Error deleting API key:", error);
