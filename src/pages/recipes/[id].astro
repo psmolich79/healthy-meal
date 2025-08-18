@@ -12,6 +12,6 @@ if (!id) {
 
 <Layout title="Szczegóły przepisu - HealthyMeal">
   <main class="min-h-screen bg-background">
-    <RecipeDetailsView client:load recipeId={id} />
+    <RecipeDetailsView client:only="react" recipeId={id} />
   </main>
 </Layout>

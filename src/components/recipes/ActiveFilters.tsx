@@ -1,11 +1,12 @@
 import React from "react";
-import { Settings, ChefHat, Utensils, AlertTriangle } from "lucide-react";
+import { Settings, ChefHat, Utensils, AlertTriangle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ActiveFiltersProps } from "./types";
+import { DIET_PREFERENCES, CUISINE_PREFERENCES, ALLERGY_PREFERENCES } from "@/data/preferences";
 
-// Helper function to categorize preferences
+// Helper function to categorize preferences using the actual preference data
 const categorizePreferences = (preferences: string[]) => {
   const categories = {
     diet: [] as string[],
@@ -13,27 +14,34 @@ const categorizePreferences = (preferences: string[]) => {
     allergies: [] as string[],
   };
 
-  // Simple categorization logic - in a real app this might come from a config
-  const dietKeywords = ["wegetariańska", "wegańska", "keto", "paleo", "bezglutenowa", "low-carb", "high-protein"];
-  const cuisineKeywords = ["włoska", "azjatycka", "meksykańska", "francuska", "polska", "indyjska", "tajska", "grecka"];
-  const allergyKeywords = ["gluten", "laktoza", "orzechy", "skorupiaki", "jaja", "soja", "ryby"];
-
   preferences.forEach((preference) => {
     const lowerPref = preference.toLowerCase();
-
-    if (dietKeywords.some((keyword) => lowerPref.includes(keyword))) {
+    
+    // Check if it's a diet preference
+    if (DIET_PREFERENCES.some(diet => diet.id === preference)) {
       categories.diet.push(preference);
-    } else if (cuisineKeywords.some((keyword) => lowerPref.includes(keyword))) {
+    }
+    // Check if it's a cuisine preference
+    else if (CUISINE_PREFERENCES.some(cuisine => cuisine.id === preference)) {
       categories.cuisine.push(preference);
-    } else if (allergyKeywords.some((keyword) => lowerPref.includes(keyword))) {
+    }
+    // Check if it's an allergy preference
+    else if (ALLERGY_PREFERENCES.some(allergy => allergy.id === preference)) {
       categories.allergies.push(preference);
-    } else {
-      // Default to diet if unsure
+    }
+    // Fallback to diet if unsure (for backward compatibility)
+    else {
       categories.diet.push(preference);
     }
   });
 
   return categories;
+};
+
+// Helper function to get preference details
+const getPreferenceDetails = (preferenceId: string) => {
+  const allPreferences = [...DIET_PREFERENCES, ...CUISINE_PREFERENCES, ...ALLERGY_PREFERENCES];
+  return allPreferences.find(pref => pref.id === preferenceId);
 };
 
 const getIconForCategory = (category: string) => {
@@ -73,6 +81,25 @@ const getCategoryVariant = (category: string) => {
     default:
       return "outline" as const;
   }
+};
+
+// Custom Badge component for allergies with warning icon
+const AllergyBadge: React.FC<{ preference: string }> = ({ preference }) => {
+  const details = getPreferenceDetails(preference);
+  const severity = details?.severity || "moderate";
+  
+  return (
+    <Badge
+      variant="outline"
+      className="text-xs px-2 py-1 border-2 border-red-400 bg-red-50 text-red-800 hover:bg-red-100 font-medium shadow-sm"
+    >
+      <XCircle className="h-3 w-3 mr-1 text-red-600" />
+      {details?.label || preference}
+      {severity === "severe" && (
+        <span className="ml-1 text-xs font-bold">⚠️</span>
+      )}
+    </Badge>
+  );
 };
 
 export const ActiveFilters: React.FC<ActiveFiltersProps> = ({ preferences, onEditProfile, className = "" }) => {
@@ -118,15 +145,28 @@ export const ActiveFilters: React.FC<ActiveFiltersProps> = ({ preferences, onEdi
                 </div>
 
                 <div className="flex flex-wrap gap-1">
-                  {items.map((preference, index) => (
-                    <Badge
-                      key={`${category}-${index}`}
-                      variant={getCategoryVariant(category)}
-                      className="text-xs px-2 py-1"
-                    >
-                      {preference}
-                    </Badge>
-                  ))}
+                  {items.map((preference, index) => {
+                    // Use custom badge for allergies
+                    if (category === "allergies") {
+                      return (
+                        <AllergyBadge
+                          key={`${category}-${index}`}
+                          preference={preference}
+                        />
+                      );
+                    }
+                    
+                    // Regular badge for diet and cuisine
+                    return (
+                      <Badge
+                        key={`${category}-${index}`}
+                        variant={getCategoryVariant(category)}
+                        className="text-xs px-2 py-1"
+                      >
+                        {getPreferenceDetails(preference)?.label || preference}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -134,7 +174,24 @@ export const ActiveFilters: React.FC<ActiveFiltersProps> = ({ preferences, onEdi
         </div>
       </ScrollArea>
 
-      <p className="text-xs text-muted-foreground">Te preferencje będą uwzględnione przy generowaniu przepisu</p>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          Te preferencje będą uwzględnione przy generowaniu przepisu
+        </p>
+        
+        {/* Special note about allergies */}
+        {categorizedPreferences.allergies.length > 0 && (
+          <div className="text-xs bg-red-50 border border-red-300 rounded-lg p-2 text-red-800">
+            <div className="flex items-center space-x-1">
+              <AlertTriangle className="h-3 w-3 text-red-600" />
+              <span className="font-medium">Uwaga:</span>
+            </div>
+            <p className="mt-1">
+              Alergie są preferencjami wykluczającymi - przepisy będą generowane bez tych składników
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

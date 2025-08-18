@@ -10,7 +10,8 @@ interface RecipeHeaderProps {
 }
 
 export const RecipeHeader: React.FC<RecipeHeaderProps> = ({ recipe, className = "" }) => {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Nieznana data";
     const date = new Date(dateString);
     return date.toLocaleDateString("pl-PL", {
       year: "numeric",
@@ -31,7 +32,8 @@ export const RecipeHeader: React.FC<RecipeHeaderProps> = ({ recipe, className = 
     );
   };
 
-  const getVisibilityBadge = (isVisible: boolean) => {
+  const getVisibilityBadge = (isVisible: boolean | null) => {
+    if (isVisible === null) return <Badge variant="secondary">❓ Nieznany</Badge>;
     return <Badge variant={isVisible ? "outline" : "secondary"}>{isVisible ? "🌐 Publiczny" : "🔒 Prywatny"}</Badge>;
   };
 
@@ -84,18 +86,10 @@ export const RecipeHeader: React.FC<RecipeHeaderProps> = ({ recipe, className = 
 
           {recipe.is_saved && <Badge variant="outline">⭐ Zapisany</Badge>}
 
-          {recipe.regenerated_from_recipe_id && <Badge variant="secondary">🔄 Wygenerowany ponownie</Badge>}
+          {/* Note: regenerated_from_recipe_id is not stored in the database for regular recipes */}
         </div>
 
-        {/* Regeneration Info */}
-        {recipe.regenerated_from_recipe_id && (
-          <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
-            <p>
-              Ten przepis został wygenerowany ponownie na podstawie poprzedniej wersji. Składniki i instrukcje mogą się
-              różnić.
-            </p>
-          </div>
-        )}
+        {/* Note: Regeneration info is not available for regular recipes */}
       </div>
     </CardHeader>
   );
