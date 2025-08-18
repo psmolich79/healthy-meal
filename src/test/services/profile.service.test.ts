@@ -24,17 +24,17 @@ describe("ProfileService", () => {
         status: "active",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
-        status_changed_at: "2024-01-01T00:00:00Z"
+        status_changed_at: "2024-01-01T00:00:00Z",
       };
 
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: mockProfile, error: null })
-        })
+          single: vi.fn().mockResolvedValue({ data: mockProfile, error: null }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const result = await profileService.getProfile("user-123");
@@ -47,15 +47,15 @@ describe("ProfileService", () => {
     it("should return null when profile not found", async () => {
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ 
-            data: null, 
-            error: { code: "PGRST116" } 
-          })
-        })
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { code: "PGRST116" },
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const result = await profileService.getProfile("user-123");
@@ -66,15 +66,15 @@ describe("ProfileService", () => {
     it("should throw error on database error", async () => {
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ 
-            data: null, 
-            error: { message: "Database error" } 
-          })
-        })
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Database error" },
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       await expect(profileService.getProfile("user-123")).rejects.toThrow();
@@ -87,22 +87,22 @@ describe("ProfileService", () => {
         user_id: "user-123",
         preferences: ["vegan", "organic"],
         status: "active",
-        updated_at: "2024-01-01T00:00:00Z"
+        updated_at: "2024-01-01T00:00:00Z",
       };
 
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: mockUpdatedProfile, 
-              error: null 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: mockUpdatedProfile,
+              error: null,
+            }),
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const result = await profileService.updatePreferences("user-123", ["vegan", "organic"]);
@@ -110,7 +110,7 @@ describe("ProfileService", () => {
       expect(result).toEqual(mockUpdatedProfile);
       expect(mockUpdate).toHaveBeenCalledWith({
         preferences: ["vegan", "organic"],
-        updated_at: expect.any(String)
+        updated_at: expect.any(String),
       });
     });
 
@@ -118,16 +118,16 @@ describe("ProfileService", () => {
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: null, 
-              error: { code: "PGRST116" } 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { code: "PGRST116" },
+            }),
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const result = await profileService.updatePreferences("user-123", ["vegan"]);
@@ -144,22 +144,22 @@ describe("ProfileService", () => {
         status: "pending_deletion",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
-        status_changed_at: "2024-01-01T00:00:00Z"
+        status_changed_at: "2024-01-01T00:00:00Z",
       };
 
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: mockProfile, 
-              error: null 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: mockProfile,
+              error: null,
+            }),
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const result = await profileService.scheduleDeletion("user-123");
@@ -168,7 +168,7 @@ describe("ProfileService", () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         status: "pending_deletion",
         status_changed_at: expect.any(String),
-        updated_at: expect.any(String)
+        updated_at: expect.any(String),
       });
     });
 
@@ -176,16 +176,16 @@ describe("ProfileService", () => {
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: null, 
-              error: { code: "PGRST116" } 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { code: "PGRST116" },
+            }),
+          }),
+        }),
       });
 
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const result = await profileService.scheduleDeletion("user-123");

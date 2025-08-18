@@ -3,32 +3,44 @@ import { POST } from "../../pages/api/recipes/[id]/regenerate";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
 // Mock services
-vi.mock("../../../../lib/services/recipe.service");
-vi.mock("../../../../lib/services/ai.service");
+vi.mock("../../../lib/services/ai.service", () => ({
+  AiService: vi.fn(),
+}));
+
+vi.mock("../../../lib/services/recipe.service", () => ({
+  RecipeService: vi.fn(),
+}));
+
+// Mock service instances
+const mockAiService = {
+  generateRecipe: vi.fn(),
+};
 
 const mockRecipeService = {
   getRecipe: vi.fn(),
   updateRecipe: vi.fn(),
 };
 
-const mockAiService = {
-  regenerateRecipe: vi.fn(),
-};
-
 describe("/api/recipes/[id]/regenerate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
-    vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
-    vi.mocked(mockRecipeService.updateRecipe).mockResolvedValue(mockRecipe);
-    vi.mocked(mockAiService.regenerateRecipe).mockResolvedValue({
-      title: "Regenerated Recipe",
-      ingredients: "Regenerated ingredients",
-      shopping_list: "Regenerated shopping list",
-      instructions: "Regenerated instructions",
-      query: "Regenerated query"
+    vi.mocked(mockAiService.generateRecipe).mockResolvedValue({
+      title: "Test Recipe",
+      ingredients: ["ingredient 1", "ingredient 2"],
+      instructions: ["step 1", "step 2"],
+      shopping_list: ["item 1", "item 2"],
+      updated_at: new Date().toISOString(),
     });
+    vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
+    vi.mocked(mockRecipeService.updateRecipe).mockResolvedValue(true);
+
+    // Mock service constructors
+    const { AiService } = require("../../../lib/services/ai.service");
+    const { RecipeService } = require("../../../lib/services/recipe.service");
+    vi.mocked(AiService).mockImplementation(() => mockAiService);
+    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
   });
 
   describe("POST", () => {
@@ -36,15 +48,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -59,15 +72,15 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -81,15 +94,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: {}
+        params: {},
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -103,15 +117,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await POST({ ...mockContext, request });
@@ -127,15 +142,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "non-existent-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/non-existent-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -146,24 +162,22 @@ describe("/api/recipes/[id]/regenerate", () => {
     });
 
     it("should return 403 when user is not the recipe owner", async () => {
-      const otherUserRecipe = {
-        ...mockRecipe,
-        user_id: "other-user-id"
-      };
+      const otherUserRecipe = { ...mockRecipe, user_id: "other-user" };
       vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(otherUserRecipe);
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -174,22 +188,21 @@ describe("/api/recipes/[id]/regenerate", () => {
     });
 
     it("should handle AI service errors gracefully", async () => {
-      vi.mocked(mockAiService.regenerateRecipe).mockRejectedValue(
-        new Error("AI service error")
-      );
+      vi.mocked(mockAiService.generateRecipe).mockRejectedValue(new Error("AI service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -200,22 +213,21 @@ describe("/api/recipes/[id]/regenerate", () => {
     });
 
     it("should handle recipe update errors gracefully", async () => {
-      vi.mocked(mockRecipeService.updateRecipe).mockRejectedValue(
-        new Error("Database error")
-      );
+      vi.mocked(mockRecipeService.updateRecipe).mockRejectedValue(new Error("Update error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4" })
+        body: JSON.stringify({ model: "gpt-4o" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -229,15 +241,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-3.5-turbo" })
+        body: JSON.stringify({ model: "gpt-3.5-turbo" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -251,15 +264,16 @@ describe("/api/recipes/[id]/regenerate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/regenerate", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/regenerate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({}),
       });
 
       const response = await POST({ ...mockContext, request });

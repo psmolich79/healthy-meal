@@ -12,7 +12,7 @@ const mockRecipeService = {
 describe("/api/recipes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     vi.mocked(mockRecipeService.getRecipes).mockResolvedValue({
       recipes: [mockRecipe],
@@ -20,8 +20,8 @@ describe("/api/recipes", () => {
         page: 1,
         limit: 10,
         total: 1,
-        totalPages: 1
-      }
+        totalPages: 1,
+      },
     });
   });
 
@@ -30,8 +30,8 @@ describe("/api/recipes", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes?page=1&limit=10");
@@ -48,8 +48,8 @@ describe("/api/recipes", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");
@@ -64,8 +64,8 @@ describe("/api/recipes", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");
@@ -80,13 +80,11 @@ describe("/api/recipes", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
-      const request = new Request(
-        "http://localhost:3000/api/recipes?page=2&limit=20&visible_only=true&sort=title.asc"
-      );
+      const request = new Request("http://localhost:3000/api/recipes?page=2&limit=20&visible_only=true&sort=title.asc");
       const response = await GET({ ...mockContext, request });
       const data = await response.json();
 
@@ -98,8 +96,8 @@ describe("/api/recipes", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes?page=invalid&limit=999");
@@ -112,15 +110,13 @@ describe("/api/recipes", () => {
     });
 
     it("should handle database errors gracefully", async () => {
-      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(
-        new Error("Database error")
-      );
+      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(new Error("Database error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");
@@ -132,15 +128,13 @@ describe("/api/recipes", () => {
     });
 
     it("should handle JWT authentication errors", async () => {
-      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(
-        new Error("JWT token expired")
-      );
+      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(new Error("JWT token expired"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");
@@ -152,15 +146,13 @@ describe("/api/recipes", () => {
     });
 
     it("should handle permission/RLS errors", async () => {
-      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(
-        new Error("RLS policy violation")
-      );
+      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(new Error("RLS policy violation"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");
@@ -172,15 +164,13 @@ describe("/api/recipes", () => {
     });
 
     it("should handle unknown errors gracefully", async () => {
-      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(
-        new Error("Unknown error")
-      );
+      vi.mocked(mockRecipeService.getRecipes).mockRejectedValue(new Error("Unknown error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes");

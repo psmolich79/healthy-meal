@@ -13,7 +13,7 @@ const mockRecipeService = {
 describe("/api/recipes/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
     vi.mocked(mockRecipeService.getUserRating).mockResolvedValue(null);
@@ -25,9 +25,9 @@ describe("/api/recipes/[id]", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);
@@ -42,9 +42,9 @@ describe("/api/recipes/[id]", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);
@@ -58,9 +58,9 @@ describe("/api/recipes/[id]", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "invalid-id" }
+        params: { id: "invalid-id" },
       });
 
       const response = await GET(mockContext);
@@ -77,9 +77,9 @@ describe("/api/recipes/[id]", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "non-existent-id" }
+        params: { id: "non-existent-id" },
       });
 
       const response = await GET(mockContext);
@@ -90,17 +90,15 @@ describe("/api/recipes/[id]", () => {
     });
 
     it("should handle JWT authentication errors", async () => {
-      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(
-        new Error("JWT token expired")
-      );
+      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(new Error("JWT token expired"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);
@@ -111,17 +109,15 @@ describe("/api/recipes/[id]", () => {
     });
 
     it("should handle permission/RLS errors", async () => {
-      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(
-        new Error("RLS policy violation")
-      );
+      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(new Error("RLS policy violation"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);
@@ -132,17 +128,15 @@ describe("/api/recipes/[id]", () => {
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(
-        new Error("Service error")
-      );
+      vi.mocked(mockRecipeService.getRecipe).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);
@@ -156,16 +150,16 @@ describe("/api/recipes/[id]", () => {
       vi.mocked(mockRecipeService.getUserRating).mockResolvedValue({
         rating: "up",
         recipe_id: "test-recipe-id",
-        user_id: mockUser.id
+        user_id: mockUser.id,
       });
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: "test-recipe-id" },
       });
 
       const response = await GET(mockContext);

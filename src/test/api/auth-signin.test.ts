@@ -15,22 +15,22 @@ describe("/api/auth/signin", () => {
             data: {
               user: {
                 id: "test-user-id",
-                email: "test@example.com"
+                email: "test@example.com",
               },
               session: {
                 access_token: "mock-access-token",
-                refresh_token: "mock-refresh-token"
-              }
+                refresh_token: "mock-refresh-token",
+              },
             },
-            error: null
-          })
-        }
+            error: null,
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -38,8 +38,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "test@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -51,21 +51,21 @@ describe("/api/auth/signin", () => {
       expect(data.access_token).toBe("mock-access-token");
       expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
-        password: "password123"
+        password: "password123",
       });
     });
 
     it("should return 400 for invalid email format", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn()
-        }
+          signInWithPassword: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -73,8 +73,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "invalid-email",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -88,14 +88,14 @@ describe("/api/auth/signin", () => {
     it("should return 400 for empty password", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn()
-        }
+          signInWithPassword: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -103,8 +103,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "test@example.com",
-          password: ""
-        })
+          password: "",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -118,22 +118,22 @@ describe("/api/auth/signin", () => {
     it("should return 400 for missing email", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn()
-        }
+          signInWithPassword: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -147,22 +147,22 @@ describe("/api/auth/signin", () => {
     it("should return 400 for missing password", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn()
-        }
+          signInWithPassword: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "test@example.com"
-        })
+          email: "test@example.com",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -176,20 +176,20 @@ describe("/api/auth/signin", () => {
     it("should return 400 for invalid JSON in request body", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn()
-        }
+          signInWithPassword: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await POST({ ...mockContext, request });
@@ -206,16 +206,16 @@ describe("/api/auth/signin", () => {
           signInWithPassword: vi.fn().mockResolvedValue({
             data: null,
             error: {
-              message: "Invalid credentials"
-            }
-          })
-        }
+              message: "Invalid credentials",
+            },
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -223,8 +223,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "test@example.com",
-          password: "wrongpassword"
-        })
+          password: "wrongpassword",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -234,7 +234,7 @@ describe("/api/auth/signin", () => {
       expect(data.error).toBe("Invalid credentials");
       expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
-        password: "wrongpassword"
+        password: "wrongpassword",
       });
     });
 
@@ -245,19 +245,19 @@ describe("/api/auth/signin", () => {
             data: {
               user: {
                 id: "test-user-id",
-                email: "test@example.com"
+                email: "test@example.com",
               },
-              session: null
+              session: null,
             },
-            error: null
-          })
-        }
+            error: null,
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -265,8 +265,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "test@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -281,16 +281,14 @@ describe("/api/auth/signin", () => {
     it("should handle unexpected errors gracefully", async () => {
       const mockSupabase = {
         auth: {
-          signInWithPassword: vi.fn().mockRejectedValue(
-            new Error("Unexpected error")
-          )
-        }
+          signInWithPassword: vi.fn().mockRejectedValue(new Error("Unexpected error")),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signin", {
@@ -298,8 +296,8 @@ describe("/api/auth/signin", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "test@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });

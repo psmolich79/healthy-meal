@@ -2,22 +2,22 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { APIContext } from "astro";
 
 // Mock the AiService
-vi.mock("../../lib/services/ai.service", () => ({
+vi.mock("../../../lib/services/ai.service", () => ({
   AiService: vi.fn().mockImplementation(() => ({
-    getAiUsage: vi.fn()
-  }))
+    getAiUsage: vi.fn(),
+  })),
 }));
 
 // Mock the validation schema
 vi.mock("../../lib/schemas/ai-usage.schemas", () => ({
   aiUsageQuerySchema: {
-    safeParse: vi.fn()
-  }
+    safeParse: vi.fn(),
+  },
 }));
 
 // Import after mocking
 import { GET } from "../../pages/api/ai/usage";
-import { AiService } from "../../lib/services/ai.service";
+import { AiService } from "../../../lib/services/ai.service";
 import { aiUsageQuerySchema } from "../../lib/schemas/ai-usage.schemas";
 
 describe("GET /api/ai/usage", () => {
@@ -31,7 +31,7 @@ describe("GET /api/ai/usage", () => {
 
     // Mock AiService instance
     mockAiService = {
-      getAiUsage: vi.fn()
+      getAiUsage: vi.fn(),
     };
     vi.mocked(AiService).mockReturnValue(mockAiService);
 
@@ -41,8 +41,8 @@ describe("GET /api/ai/usage", () => {
       data: {
         period: "month",
         start_date: undefined,
-        end_date: undefined
-      }
+        end_date: undefined,
+      },
     };
     vi.mocked(aiUsageQuerySchema.safeParse).mockReturnValue(mockValidationResult);
 
@@ -52,8 +52,8 @@ describe("GET /api/ai/usage", () => {
       params: {},
       locals: {
         user: { id: "user-123" },
-        supabase: {}
-      }
+        supabase: {},
+      },
     } as any;
   });
 
@@ -83,7 +83,7 @@ describe("GET /api/ai/usage", () => {
     it("should return 400 when validation fails", async () => {
       mockValidationResult.success = false;
       mockValidationResult.error = {
-        errors: [{ message: "Invalid period" }]
+        errors: [{ message: "Invalid period" }],
       };
 
       const response = await GET(mockContext);
@@ -101,7 +101,7 @@ describe("GET /api/ai/usage", () => {
       mockValidationResult.data = {
         period: "custom",
         start_date: "2024-01-01T00:00:00Z",
-        end_date: "2024-01-31T23:59:59Z"
+        end_date: "2024-01-31T23:59:59Z",
       };
 
       mockAiService.getAiUsage.mockResolvedValue({
@@ -113,7 +113,7 @@ describe("GET /api/ai/usage", () => {
         total_output_tokens: 2000,
         total_cost: 0.15,
         models_used: { "gpt-4": { generations: 5, cost: 0.15 } },
-        daily_breakdown: []
+        daily_breakdown: [],
       });
 
       const response = await GET(mockContext);
@@ -134,15 +134,15 @@ describe("GET /api/ai/usage", () => {
         total_generations: 10,
         total_input_tokens: 2000,
         total_output_tokens: 4000,
-        total_cost: 0.30,
+        total_cost: 0.3,
         models_used: {
           "gpt-4": { generations: 7, cost: 0.21 },
-          "gpt-3.5-turbo": { generations: 3, cost: 0.09 }
+          "gpt-3.5-turbo": { generations: 3, cost: 0.09 },
         },
         daily_breakdown: [
           { date: "2024-01-15", generations: 3, cost: 0.09 },
-          { date: "2024-01-16", generations: 2, cost: 0.06 }
-        ]
+          { date: "2024-01-16", generations: 2, cost: 0.06 },
+        ],
       };
 
       mockAiService.getAiUsage.mockResolvedValue(mockUsageData);
@@ -152,12 +152,7 @@ describe("GET /api/ai/usage", () => {
 
       expect(response.status).toBe(200);
       expect(body).toEqual(mockUsageData);
-      expect(mockAiService.getAiUsage).toHaveBeenCalledWith(
-        "user-123",
-        "month",
-        undefined,
-        undefined
-      );
+      expect(mockAiService.getAiUsage).toHaveBeenCalledWith("user-123", "month", undefined, undefined);
     });
 
     it("should return AI usage statistics for custom period", async () => {
@@ -167,7 +162,7 @@ describe("GET /api/ai/usage", () => {
       mockValidationResult.data = {
         period: "custom",
         start_date: "2024-01-01T00:00:00Z",
-        end_date: "2024-01-15T23:59:59Z"
+        end_date: "2024-01-15T23:59:59Z",
       };
 
       const mockUsageData = {
@@ -179,7 +174,7 @@ describe("GET /api/ai/usage", () => {
         total_output_tokens: 2000,
         total_cost: 0.15,
         models_used: { "gpt-4": { generations: 5, cost: 0.15 } },
-        daily_breakdown: []
+        daily_breakdown: [],
       };
 
       mockAiService.getAiUsage.mockResolvedValue(mockUsageData);
@@ -207,7 +202,7 @@ describe("GET /api/ai/usage", () => {
         total_output_tokens: 0,
         total_cost: null,
         models_used: {},
-        daily_breakdown: []
+        daily_breakdown: [],
       };
 
       mockValidationResult.data.period = "week";
@@ -224,14 +219,10 @@ describe("GET /api/ai/usage", () => {
 
   describe("Error Handling", () => {
     it("should handle custom period validation errors", async () => {
-      mockContext.request = new Request(
-        "http://localhost:4321/api/ai/usage?period=custom"
-      );
+      mockContext.request = new Request("http://localhost:4321/api/ai/usage?period=custom");
       mockValidationResult.data = { period: "custom" };
 
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("Custom period requires both start_date and end_date")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("Custom period requires both start_date and end_date"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -247,12 +238,10 @@ describe("GET /api/ai/usage", () => {
       mockValidationResult.data = {
         period: "custom",
         start_date: "2024-01-31T00:00:00Z",
-        end_date: "2024-01-01T00:00:00Z"
+        end_date: "2024-01-01T00:00:00Z",
       };
 
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("Start date must be before end date")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("Start date must be before end date"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -264,9 +253,7 @@ describe("GET /api/ai/usage", () => {
     it("should handle invalid period errors", async () => {
       mockValidationResult.data.period = "invalid";
 
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("Invalid period specified")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("Invalid period specified"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -276,9 +263,7 @@ describe("GET /api/ai/usage", () => {
     });
 
     it("should handle database errors", async () => {
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("Database connection failed")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("Database connection failed"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -288,9 +273,7 @@ describe("GET /api/ai/usage", () => {
     });
 
     it("should handle JWT errors", async () => {
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("JWT token expired")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("JWT token expired"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -300,9 +283,7 @@ describe("GET /api/ai/usage", () => {
     });
 
     it("should handle permission errors", async () => {
-      mockAiService.getAiUsage.mockRejectedValue(
-        new Error("permission denied")
-      );
+      mockAiService.getAiUsage.mockRejectedValue(new Error("permission denied"));
 
       const response = await GET(mockContext);
       const body = await response.json();
@@ -314,9 +295,7 @@ describe("GET /api/ai/usage", () => {
 
   describe("Query Parameter Parsing", () => {
     it("should parse period parameter correctly", async () => {
-      mockContext.request = new Request(
-        "http://localhost:4321/api/ai/usage?period=year"
-      );
+      mockContext.request = new Request("http://localhost:4321/api/ai/usage?period=year");
       mockValidationResult.data.period = "year";
 
       mockAiService.getAiUsage.mockResolvedValue({
@@ -326,9 +305,9 @@ describe("GET /api/ai/usage", () => {
         total_generations: 50,
         total_input_tokens: 10000,
         total_output_tokens: 20000,
-        total_cost: 1.50,
-        models_used: { "gpt-4": { generations: 50, cost: 1.50 } },
-        daily_breakdown: []
+        total_cost: 1.5,
+        models_used: { "gpt-4": { generations: 50, cost: 1.5 } },
+        daily_breakdown: [],
       });
 
       const response = await GET(mockContext);
@@ -352,7 +331,7 @@ describe("GET /api/ai/usage", () => {
         total_output_tokens: 6000,
         total_cost: 0.45,
         models_used: { "gpt-4": { generations: 15, cost: 0.45 } },
-        daily_breakdown: []
+        daily_breakdown: [],
       });
 
       const response = await GET(mockContext);

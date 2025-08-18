@@ -12,12 +12,12 @@ const mockSupabase = {
 // Mock locals
 const mockLocals = {
   user: { id: "user-123", email: "test@example.com" },
-  supabase: mockSupabase
+  supabase: mockSupabase,
 };
 
 const mockLocalsUnauthorized = {
   user: undefined,
-  supabase: {} as any
+  supabase: {} as any,
 };
 
 describe("/api/profiles/me", () => {
@@ -33,17 +33,17 @@ describe("/api/profiles/me", () => {
         status: "active",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
-        status_changed_at: "2024-01-01T00:00:00Z"
+        status_changed_at: "2024-01-01T00:00:00Z",
       };
 
       // Mock supabase.from() response
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: mockProfile, error: null })
-        })
+          single: vi.fn().mockResolvedValue({ data: mockProfile, error: null }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const response = await GET({ locals: mockLocals } as any);
@@ -55,7 +55,7 @@ describe("/api/profiles/me", () => {
         preferences: ["vegetarian", "gluten-free"],
         status: "active",
         created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z"
+        updated_at: "2024-01-01T00:00:00Z",
       });
     });
 
@@ -71,14 +71,14 @@ describe("/api/profiles/me", () => {
       // Mock supabase.from() response for profile not found
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ 
-            data: null, 
-            error: { code: "PGRST116" } 
-          })
-        })
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { code: "PGRST116" },
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const response = await GET({ locals: mockLocals } as any);
@@ -92,14 +92,14 @@ describe("/api/profiles/me", () => {
       // Mock supabase.from() response for database error
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ 
-            data: null, 
-            error: { message: "Database error" } 
-          })
-        })
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Database error" },
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const response = await GET({ locals: mockLocals } as any);
@@ -116,28 +116,28 @@ describe("/api/profiles/me", () => {
         user_id: "user-123",
         preferences: ["vegan", "organic"],
         status: "active",
-        updated_at: "2024-01-01T00:00:00Z"
+        updated_at: "2024-01-01T00:00:00Z",
       };
 
       // Mock supabase.from() response for update
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: mockUpdatedProfile, 
-              error: null 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: mockUpdatedProfile,
+              error: null,
+            }),
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const request = new Request("http://localhost/api/profiles/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: ["vegan", "organic"] })
+        body: JSON.stringify({ preferences: ["vegan", "organic"] }),
       });
 
       const response = await PUT({ request, locals: mockLocals } as any);
@@ -151,7 +151,7 @@ describe("/api/profiles/me", () => {
       const request = new Request("http://localhost/api/profiles/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: ["vegan"] })
+        body: JSON.stringify({ preferences: ["vegan"] }),
       });
 
       const response = await PUT({ request, locals: mockLocalsUnauthorized } as any);
@@ -165,7 +165,7 @@ describe("/api/profiles/me", () => {
       const request = new Request("http://localhost/api/profiles/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await PUT({ request, locals: mockLocals } as any);
@@ -179,7 +179,7 @@ describe("/api/profiles/me", () => {
       const request = new Request("http://localhost/api/profiles/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: [] })
+        body: JSON.stringify({ preferences: [] }),
       });
 
       const response = await PUT({ request, locals: mockLocals } as any);
@@ -195,21 +195,21 @@ describe("/api/profiles/me", () => {
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: null, 
-              error: { code: "PGRST116" } 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { code: "PGRST116" },
+            }),
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const request = new Request("http://localhost/api/profiles/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: ["vegan"] })
+        body: JSON.stringify({ preferences: ["vegan"] }),
       });
 
       const response = await PUT({ request, locals: mockLocals } as any);
@@ -228,22 +228,22 @@ describe("/api/profiles/me", () => {
         status: "pending_deletion",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
-        status_changed_at: "2024-01-01T00:00:00Z"
+        status_changed_at: "2024-01-01T00:00:00Z",
       };
 
       // Mock supabase.from() response for deletion
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: mockProfile, 
-              error: null 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: mockProfile,
+              error: null,
+            }),
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const response = await DELETE({ locals: mockLocals } as any);
@@ -253,7 +253,7 @@ describe("/api/profiles/me", () => {
       expect(data).toEqual({
         message: "Profile scheduled for deletion",
         status: "pending_deletion",
-        deletion_scheduled_at: "2024-01-01T00:00:00Z"
+        deletion_scheduled_at: "2024-01-01T00:00:00Z",
       });
     });
 
@@ -270,15 +270,15 @@ describe("/api/profiles/me", () => {
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ 
-              data: null, 
-              error: { code: "PGRST116" } 
-            })
-          })
-        })
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { code: "PGRST116" },
+            }),
+          }),
+        }),
       });
       mockSupabase.from = vi.fn().mockReturnValue({
-        update: mockUpdate
+        update: mockUpdate,
       });
 
       const response = await DELETE({ locals: mockLocals } as any);

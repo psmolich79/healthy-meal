@@ -3,12 +3,12 @@ import { POST, PUT, DELETE } from "../../pages/api/recipes/[id]/rating";
 import { createMockContext, mockUser, mockRecipe, mockRating } from "../setup";
 
 // Mock services
-vi.mock("../../../../lib/services/rating.service", () => ({
-  RatingService: vi.fn()
+vi.mock("../../../lib/services/rating.service", () => ({
+  RatingService: vi.fn(),
 }));
 
-vi.mock("../../../../lib/services/recipe.service", () => ({
-  RecipeService: vi.fn()
+vi.mock("../../../lib/services/recipe.service", () => ({
+  RecipeService: vi.fn(),
 }));
 
 // Mock service instances
@@ -25,21 +25,21 @@ const mockRecipeService = {
 describe("/api/recipes/[id]/rating", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     vi.mocked(mockRatingService.addRating).mockResolvedValue({
       rating: "up",
       recipe_id: mockRecipe.id,
-      user_id: mockUser.id
+      user_id: mockUser.id,
     });
     vi.mocked(mockRatingService.updateRating).mockResolvedValue({
       rating: "down",
       recipe_id: mockRecipe.id,
-      user_id: mockUser.id
+      user_id: mockUser.id,
     });
     vi.mocked(mockRatingService.deleteRating).mockResolvedValue(true);
     vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
-    
+
     // Mock service constructors
     const { RatingService } = require("../../../lib/services/rating.service");
     const { RecipeService } = require("../../../lib/services/recipe.service");
@@ -53,15 +53,15 @@ describe("/api/recipes/[id]/rating", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "up" })
+        body: JSON.stringify({ rating: "up" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -76,15 +76,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "up" })
+        body: JSON.stringify({ rating: "up" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -98,15 +98,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: {}
+        params: {},
       });
 
       const request = new Request("http://localhost:3000/api/recipes//rating", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "up" })
+        body: JSON.stringify({ rating: "up" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -120,15 +120,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await POST({ ...mockContext, request });
@@ -142,15 +142,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "invalid" })
+        body: JSON.stringify({ rating: "invalid" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -167,15 +167,15 @@ describe("/api/recipes/[id]/rating", () => {
         locals: {
           user: mockUser,
           supabase: {},
-          authenticatedSupabase: {}
+          authenticatedSupabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "up" })
+        body: JSON.stringify({ rating: "up" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -191,15 +191,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "down" })
+        body: JSON.stringify({ rating: "down" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -213,15 +213,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "down" })
+        body: JSON.stringify({ rating: "down" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -235,15 +235,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "invalid-uuid" }
+        params: { id: "invalid-uuid" },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/invalid-uuid/rating", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "down" })
+        body: JSON.stringify({ rating: "down" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -257,15 +257,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -279,15 +279,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "invalid" })
+        body: JSON.stringify({ rating: "invalid" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -303,15 +303,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "down" })
+        body: JSON.stringify({ rating: "down" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -327,15 +327,15 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/rating`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: "down" })
+        body: JSON.stringify({ rating: "down" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -351,9 +351,9 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const response = await DELETE(mockContext);
@@ -367,9 +367,9 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const response = await DELETE(mockContext);
@@ -383,9 +383,9 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "invalid-uuid" }
+        params: { id: "invalid-uuid" },
       });
 
       const response = await DELETE(mockContext);
@@ -401,9 +401,9 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const response = await DELETE(mockContext);
@@ -419,9 +419,9 @@ describe("/api/recipes/[id]/rating", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: mockRecipe.id }
+        params: { id: mockRecipe.id },
       });
 
       const response = await DELETE(mockContext);

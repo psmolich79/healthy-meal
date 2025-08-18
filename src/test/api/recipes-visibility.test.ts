@@ -2,22 +2,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PUT } from "../../pages/api/recipes/[id]/visibility";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock RecipeService
-vi.mock("../../../../lib/services/recipe.service");
+// Mock services
+vi.mock("../../../lib/services/recipe.service", () => ({
+  RecipeService: vi.fn(),
+}));
 
+// Mock service instances
 const mockRecipeService = {
-  updateRecipeVisibility: vi.fn(),
+  getRecipe: vi.fn(),
+  updateVisibility: vi.fn(),
 };
 
 describe("/api/recipes/[id]/visibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
-    vi.mocked(mockRecipeService.updateRecipeVisibility).mockResolvedValue({
-      ...mockRecipe,
-      is_visible: false
-    });
+    vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
+    vi.mocked(mockRecipeService.updateVisibility).mockResolvedValue(true);
+
+    // Mock service constructors
+    const { RecipeService } = require("../../../lib/services/recipe.service");
+    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
   });
 
   describe("PUT", () => {
@@ -25,15 +31,16 @@ describe("/api/recipes/[id]/visibility", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false })
+        body: JSON.stringify({ is_visible: false }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -47,15 +54,15 @@ describe("/api/recipes/[id]/visibility", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false })
+        body: JSON.stringify({ is_visible: false }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -69,15 +76,16 @@ describe("/api/recipes/[id]/visibility", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: {}
+        params: {},
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false })
+        body: JSON.stringify({ is_visible: false }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -91,15 +99,16 @@ describe("/api/recipes/[id]/visibility", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -113,15 +122,16 @@ describe("/api/recipes/[id]/visibility", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}) // Missing required is_visible field
+        body: JSON.stringify({ is_visible: "invalid" }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -133,20 +143,21 @@ describe("/api/recipes/[id]/visibility", () => {
     });
 
     it("should return 404 when recipe is not found", async () => {
-      vi.mocked(mockRecipeService.updateRecipeVisibility).mockResolvedValue(null);
+      vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(null);
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "non-existent-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/non-existent-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false })
+        body: JSON.stringify({ is_visible: false }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -157,22 +168,21 @@ describe("/api/recipes/[id]/visibility", () => {
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRecipeService.updateRecipeVisibility).mockRejectedValue(
-        new Error("Service error")
-      );
+      vi.mocked(mockRecipeService.updateVisibility).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: false })
+        body: JSON.stringify({ is_visible: false }),
       });
 
       const response = await PUT({ ...mockContext, request });
@@ -183,23 +193,19 @@ describe("/api/recipes/[id]/visibility", () => {
     });
 
     it("should accept true value for visibility", async () => {
-      vi.mocked(mockRecipeService.updateRecipeVisibility).mockResolvedValue({
-        ...mockRecipe,
-        is_visible: true
-      });
-
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const request = new Request("http://localhost:3000/api/recipes/test-recipe-id/visibility", {
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/visibility`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_visible: true })
+        body: JSON.stringify({ is_visible: true }),
       });
 
       const response = await PUT({ ...mockContext, request });

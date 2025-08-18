@@ -1,27 +1,34 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
     globals: true,
     css: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        "coverage/**",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "src/test/**",
+      ],
+    },
     exclude: [
-      'tests/**/*',
-      'src/test/hooks/useProfileForm.test.ts', // Problematic test
-      'src/test/hooks/useRecipeGenerator.test.ts',
-      'src/test/services/**/*',
-      'src/test/api/**/*', // Wykluczam wszystkie testy API na razie
-      'node_modules/**/*', // Wykluczam testy z node_modules
-      'src/hooks/useProfileForm.test.ts' // Problematic test in src/hooks
+      "tests/**/*",
+      "node_modules/**/*",
     ],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 });

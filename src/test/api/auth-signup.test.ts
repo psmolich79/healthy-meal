@@ -15,22 +15,22 @@ describe("/api/auth/signup", () => {
             data: {
               user: {
                 id: "new-user-id",
-                email: "newuser@example.com"
+                email: "newuser@example.com",
               },
               session: {
                 access_token: "mock-access-token",
-                refresh_token: "mock-refresh-token"
-              }
+                refresh_token: "mock-refresh-token",
+              },
             },
-            error: null
-          })
-        }
+            error: null,
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -38,8 +38,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "newuser@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -51,21 +51,21 @@ describe("/api/auth/signup", () => {
       expect(data.access_token).toBe("mock-access-token");
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
         email: "newuser@example.com",
-        password: "password123"
+        password: "password123",
       });
     });
 
     it("should return 400 for invalid email format", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn()
-        }
+          signUp: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -73,8 +73,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "invalid-email",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -88,14 +88,14 @@ describe("/api/auth/signup", () => {
     it("should return 400 for empty password", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn()
-        }
+          signUp: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -103,8 +103,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "newuser@example.com",
-          password: ""
-        })
+          password: "",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -118,22 +118,22 @@ describe("/api/auth/signup", () => {
     it("should return 400 for missing email", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn()
-        }
+          signUp: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -147,22 +147,22 @@ describe("/api/auth/signup", () => {
     it("should return 400 for missing password", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn()
-        }
+          signUp: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "newuser@example.com"
-        })
+          email: "newuser@example.com",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -176,20 +176,20 @@ describe("/api/auth/signup", () => {
     it("should return 400 for invalid JSON in request body", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn()
-        }
+          signUp: vi.fn(),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await POST({ ...mockContext, request });
@@ -206,16 +206,16 @@ describe("/api/auth/signup", () => {
           signUp: vi.fn().mockResolvedValue({
             data: null,
             error: {
-              message: "User already registered"
-            }
-          })
-        }
+              message: "User already registered",
+            },
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -223,8 +223,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "existing@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -234,7 +234,7 @@ describe("/api/auth/signup", () => {
       expect(data.error).toBe("User already registered");
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
         email: "existing@example.com",
-        password: "password123"
+        password: "password123",
       });
     });
 
@@ -245,19 +245,19 @@ describe("/api/auth/signup", () => {
             data: {
               user: {
                 id: "new-user-id",
-                email: "newuser@example.com"
+                email: "newuser@example.com",
               },
-              session: null
+              session: null,
             },
-            error: null
-          })
-        }
+            error: null,
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -265,8 +265,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "newuser@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -281,16 +281,14 @@ describe("/api/auth/signup", () => {
     it("should handle unexpected errors gracefully", async () => {
       const mockSupabase = {
         auth: {
-          signUp: vi.fn().mockRejectedValue(
-            new Error("Unexpected error")
-          )
-        }
+          signUp: vi.fn().mockRejectedValue(new Error("Unexpected error")),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -298,8 +296,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "newuser@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -316,19 +314,19 @@ describe("/api/auth/signup", () => {
             data: {
               user: {
                 id: "new-user-id",
-                email: "newuser@example.com"
+                email: "newuser@example.com",
               },
-              session: null
+              session: null,
             },
-            error: null
-          })
-        }
+            error: null,
+          }),
+        },
       };
 
       const mockContext = createMockContext({
         locals: {
-          supabase: mockSupabase
-        }
+          supabase: mockSupabase,
+        },
       });
 
       const request = new Request("http://localhost:3000/api/auth/signup", {
@@ -336,8 +334,8 @@ describe("/api/auth/signup", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "newuser@example.com",
-          password: "password123"
-        })
+          password: "password123",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });

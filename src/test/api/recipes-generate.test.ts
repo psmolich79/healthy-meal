@@ -22,7 +22,7 @@ const mockAiService = {
 describe("/api/recipes/generate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     vi.mocked(mockRecipeService.createRecipe).mockResolvedValue(mockRecipe);
     vi.mocked(mockProfileService.getProfile).mockResolvedValue({
@@ -31,14 +31,14 @@ describe("/api/recipes/generate", () => {
       status: "active",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
-      status_changed_at: "2024-01-01T00:00:00Z"
+      status_changed_at: "2024-01-01T00:00:00Z",
     });
     vi.mocked(mockAiService.generateRecipe).mockResolvedValue({
       title: "Test Recipe",
       ingredients: "Test ingredients",
       shopping_list: "Test shopping list",
       instructions: "Test instructions",
-      query: "Test query"
+      query: "Test query",
     });
   });
 
@@ -47,14 +47,14 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "vegetarian pasta" })
+        body: JSON.stringify({ query: "vegetarian pasta" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -69,14 +69,14 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "vegetarian pasta" })
+        body: JSON.stringify({ query: "vegetarian pasta" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -90,14 +90,14 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "invalid json"
+        body: "invalid json",
       });
 
       const response = await POST({ ...mockContext, request });
@@ -111,14 +111,14 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}) // Missing required query field
+        body: JSON.stringify({}), // Missing required query field
       });
 
       const response = await POST({ ...mockContext, request });
@@ -135,14 +135,14 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "vegetarian pasta" })
+        body: JSON.stringify({ query: "vegetarian pasta" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -153,21 +153,19 @@ describe("/api/recipes/generate", () => {
     });
 
     it("should handle AI service errors gracefully", async () => {
-      vi.mocked(mockAiService.generateRecipe).mockRejectedValue(
-        new Error("AI service error")
-      );
+      vi.mocked(mockAiService.generateRecipe).mockRejectedValue(new Error("AI service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "vegetarian pasta" })
+        body: JSON.stringify({ query: "vegetarian pasta" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -178,21 +176,19 @@ describe("/api/recipes/generate", () => {
     });
 
     it("should handle recipe creation errors gracefully", async () => {
-      vi.mocked(mockRecipeService.createRecipe).mockRejectedValue(
-        new Error("Database error")
-      );
+      vi.mocked(mockRecipeService.createRecipe).mockRejectedValue(new Error("Database error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "vegetarian pasta" })
+        body: JSON.stringify({ query: "vegetarian pasta" }),
       });
 
       const response = await POST({ ...mockContext, request });
@@ -206,17 +202,17 @@ describe("/api/recipes/generate", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
-        }
+          supabase: {},
+        },
       });
 
       const request = new Request("http://localhost:3000/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query: "vegetarian pasta",
-          model: "gpt-4"
-        })
+          model: "gpt-4",
+        }),
       });
 
       const response = await POST({ ...mockContext, request });

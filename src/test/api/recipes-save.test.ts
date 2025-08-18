@@ -2,23 +2,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST, DELETE } from "../../pages/api/recipes/[id]/save";
 import { createMockContext, mockUser, mockRecipe } from "../setup";
 
-// Mock RecipeService
-vi.mock("../../../../lib/services/recipe.service");
+// Mock services
+vi.mock("../../../lib/services/recipe.service", () => ({
+  RecipeService: vi.fn(),
+}));
 
+// Mock service instances
 const mockRecipeService = {
+  getRecipe: vi.fn(),
   saveRecipe: vi.fn(),
   unsaveRecipe: vi.fn(),
-  isRecipeSaved: vi.fn(),
 };
 
 describe("/api/recipes/[id]/save", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
+    vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(mockRecipe);
     vi.mocked(mockRecipeService.saveRecipe).mockResolvedValue(true);
     vi.mocked(mockRecipeService.unsaveRecipe).mockResolvedValue(true);
-    vi.mocked(mockRecipeService.isRecipeSaved).mockResolvedValue(true);
+
+    // Mock service constructors
+    const { RecipeService } = require("../../../lib/services/recipe.service");
+    vi.mocked(RecipeService).mockImplementation(() => mockRecipeService);
   });
 
   describe("POST", () => {
@@ -26,12 +33,19 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await POST(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -42,12 +56,18 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await POST(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -58,12 +78,19 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: {}
+        params: {},
       });
 
-      const response = await POST(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -71,17 +98,24 @@ describe("/api/recipes/[id]/save", () => {
     });
 
     it("should return 404 when recipe is not found", async () => {
-      vi.mocked(mockRecipeService.saveRecipe).mockResolvedValue(false);
+      vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(null);
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "non-existent-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await POST(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -89,19 +123,24 @@ describe("/api/recipes/[id]/save", () => {
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRecipeService.saveRecipe).mockRejectedValue(
-        new Error("Service error")
-      );
+      vi.mocked(mockRecipeService.saveRecipe).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await POST(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -114,12 +153,18 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -130,12 +175,17 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: undefined,
-          supabase: {}
+          supabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -146,12 +196,18 @@ describe("/api/recipes/[id]/save", () => {
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: {}
+        params: {},
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/save`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -159,17 +215,23 @@ describe("/api/recipes/[id]/save", () => {
     });
 
     it("should return 404 when recipe is not found", async () => {
-      vi.mocked(mockRecipeService.unsaveRecipe).mockResolvedValue(false);
+      vi.mocked(mockRecipeService.getRecipe).mockResolvedValue(null);
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "non-existent-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -177,19 +239,23 @@ describe("/api/recipes/[id]/save", () => {
     });
 
     it("should handle service errors gracefully", async () => {
-      vi.mocked(mockRecipeService.unsaveRecipe).mockRejectedValue(
-        new Error("Service error")
-      );
+      vi.mocked(mockRecipeService.unsaveRecipe).mockRejectedValue(new Error("Service error"));
 
       const mockContext = createMockContext({
         locals: {
           user: mockUser,
-          supabase: {}
+          supabase: {},
+          authenticatedSupabase: {},
         },
-        params: { id: "test-recipe-id" }
+        params: { id: mockRecipe.id },
       });
 
-      const response = await DELETE(mockContext);
+      const request = new Request(`http://localhost:3000/api/recipes/${mockRecipe.id}/save`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response = await DELETE({ ...mockContext, request });
       const data = await response.json();
 
       expect(response.status).toBe(500);
