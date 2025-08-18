@@ -45,22 +45,25 @@ export class AiService {
     shopping_list: string[];
     instructions: string[];
     aiGeneration: Omit<AiUsage, "id" | "recipe_id" | "created_at">;
+    userApiKeyId: string | null;
   }> {
     // Check rate limiting
     await this.checkRateLimit(userId);
 
     // Get user's API key if available
     let userApiKey: string | null = null;
+    let userApiKeyId: string | null = null;
     try {
       const { data: apiKeyData } = await this.supabase
         .from("user_api_keys")
-        .select("api_key, is_active")
+        .select("id, api_key, is_active")
         .eq("user_id", userId)
         .eq("is_active", true)
         .single();
       
       if (apiKeyData?.api_key) {
         userApiKey = apiKeyData.api_key;
+        userApiKeyId = apiKeyData.id;
       }
     } catch (error) {
       // User doesn't have an API key, use default
@@ -145,6 +148,7 @@ export class AiService {
       return {
         ...generatedRecipe,
         aiGeneration,
+        userApiKeyId,
       };
     } catch (error) {
       console.error("Error generating recipe with AI:", error);

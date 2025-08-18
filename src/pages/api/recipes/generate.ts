@@ -2,9 +2,9 @@ import type { APIRoute } from "astro";
 import { RecipeService } from "../../../lib/services/recipe.service";
 import { ProfileService } from "../../../lib/services/profile.service";
 import { AiService } from "../../../lib/services/ai.service";
+import { ApiUsageService } from "../../../lib/services/api-usage.service";
 import { generateRecipeSchema } from "../../../lib/schemas/recipe.schemas";
 import type { GeneratedRecipeDto } from "../../../types";
-import { createClient } from "@supabase/supabase-js";
 
 /**
  * API endpoint for generating new AI-powered recipes.
@@ -79,6 +79,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const recipeService = new RecipeService(supabase);
     const profileService = new ProfileService(supabase);
     const aiService = new AiService(supabase);
+    const apiUsageService = new ApiUsageService(supabase);
+
+    // Check API usage limits before proceeding
+    console.log("Checking API usage limits for user:", user.id);
+    const usageCheck = await apiUsageService.checkProfileApiKeyLimit(user.id);
+    
+    if (!usageCheck.canProceed) {
+      const resetTime = new Date(usageCheck.limits.reset_time).toLocaleString("pl-PL");
+      return new Response(
+        JSON.stringify({ 
+          error: "Dzienny limit generowania przepisów został wyczerpany",
+          details: {
+            daily_limit: usageCheck.limits.daily_limit,
+            current_usage: usageCheck.limits.current_usage,
+            reset_time: resetTime,
+            tip: "Dodaj własny klucz API w profilu, aby generować przepisy bez ograniczeń"
+          }
+        }), {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Get user profile for preferences
     console.log("Getting user profile for user:", user.id);
@@ -129,6 +152,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
       cost: aiResult.aiGeneration.cost,
     });
 
+    // Log API usage for rate limiting
+    console.log("Logging API usage for rate limiting...");
+    await apiUsageService.logUsage({
+      user_id: user.id,
+      api_key_id: aiResult.userApiKeyId, // Use user's API key ID if available
+      endpoint: "/api/recipes/generate",
+      tokens_used: (aiResult.aiGeneration.input_tokens || 0) + (aiResult.aiGeneration.output_tokens || 0),
+      cost_usd: aiResult.aiGeneration.cost,
+      ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
+      user_agent: request.headers.get("user-agent"),
+    });
+
     // Transform to GeneratedRecipeDto
     const generatedRecipeDto: GeneratedRecipeDto = {
       id: recipe.id,
@@ -146,6 +181,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         output_tokens: aiResult.aiGeneration.output_tokens,
         cost: aiResult.aiGeneration.cost,
       },
+      user_api_key_id: aiResult.userApiKeyId,
     };
 
     return new Response(JSON.stringify(generatedRecipeDto), {

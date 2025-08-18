@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { RecipeService } from "../../../../lib/services/recipe.service";
 import { AiService } from "../../../../lib/services/ai.service";
+import { ApiUsageService } from "../../../../lib/services/api-usage.service";
 import { recipeIdSchema } from "../../../../lib/schemas/recipe.schemas";
 import type { RegeneratedRecipeDto } from "../../../../types";
 
@@ -58,6 +59,29 @@ export const POST: APIRoute = async ({ params, locals }) => {
     // Create service instances
     const recipeService = new RecipeService(supabase);
     const aiService = new AiService(supabase);
+    const apiUsageService = new ApiUsageService(supabase);
+
+    // Check API usage limits before proceeding
+    console.log("Checking API usage limits for regeneration, user:", user.id);
+    const usageCheck = await apiUsageService.checkProfileApiKeyLimit(user.id);
+    
+    if (!usageCheck.canProceed) {
+      const resetTime = new Date(usageCheck.limits.reset_time).toLocaleString("pl-PL");
+      return new Response(
+        JSON.stringify({ 
+          error: "Dzienny limit generowania przepisów został wyczerpany",
+          details: {
+            daily_limit: usageCheck.limits.daily_limit,
+            current_usage: usageCheck.limits.current_usage,
+            reset_time: resetTime,
+            tip: "Dodaj własny klucz API w profilu, aby generować przepisy bez ograniczeń"
+          }
+        }), {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Get the original recipe to validate ownership and extract data
     const originalRecipe = await recipeService.getRecipe(recipeId, user.id);
@@ -108,8 +132,17 @@ export const POST: APIRoute = async ({ params, locals }) => {
       throw new Error("Failed to store regenerated recipe");
     }
 
-    // Note: AI usage log is created without recipe_id for now
-    // TODO: Add recipe_id field to ai_usage table in future migration
+    // Log API usage for rate limiting
+    console.log("Logging API usage for regeneration...");
+    await apiUsageService.logUsage({
+      user_id: user.id,
+      api_key_id: aiResult.userApiKeyId, // Use user's API key ID if available
+      endpoint: "/api/recipes/[id]/regenerate",
+      tokens_used: (aiResult.aiGeneration.input_tokens || 0) + (aiResult.aiGeneration.output_tokens || 0),
+      cost_usd: aiResult.aiGeneration.cost,
+      ip_address: undefined, // No request object in this context
+      user_agent: undefined,
+    });
 
     // Transform to RegeneratedRecipeDto
     const regeneratedRecipeDto: RegeneratedRecipeDto = {
@@ -128,6 +161,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
         output_tokens: aiResult.aiGeneration.output_tokens,
         cost: aiResult.aiGeneration.cost,
       },
+      user_api_key_id: aiResult.userApiKeyId,
     };
 
     return new Response(JSON.stringify(regeneratedRecipeDto), {
