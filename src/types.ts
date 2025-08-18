@@ -64,6 +64,31 @@ export type UpdateApiKeyCommand = {
 };
 
 /**
+ * API usage log entry for tracking API key usage
+ */
+export interface ApiUsageLog {
+  id: string;
+  user_id: string;
+  api_key_id?: string;
+  endpoint: string;
+  tokens_used?: number;
+  cost_usd?: number;
+  created_at: string;
+  ip_address?: string;
+  user_agent?: string;
+}
+
+/**
+ * API usage limits configuration
+ */
+export interface ApiUsageLimits {
+  daily_limit: number;
+  current_usage: number;
+  remaining_usage: number;
+  reset_time: string;
+}
+
+/**
  * DTO for the response after updating a user's profile.
  * Contains a subset of the full profile data.
  * @see PUT /api/profiles/me
@@ -111,11 +136,13 @@ export type GeneratedRecipeDto = Pick<Recipe, "id" | "title" | "is_visible" | "c
   initial_user_query: string;
   user_preferences_applied: Profile["preferences"];
   ai_generation: AiGenerationDto;
+  user_api_key_id?: string | null;
 };
 
 /**
  * DTO for a detailed view of a single recipe.
  * Includes additional computed fields like `is_saved` and `user_rating`.
+ * Also includes extracted content fields from the JSONB content column.
  * @see GET /api/recipes/{id}
  */
 export type RecipeDetailsDto = Recipe & {
@@ -123,6 +150,12 @@ export type RecipeDetailsDto = Recipe & {
   is_saved: boolean;
   /** The current user's rating for the recipe, if any. */
   user_rating: RatingType | null;
+  /** Extracted ingredients from the content JSONB field. */
+  ingredients: string[];
+  /** Extracted shopping list from the content JSONB field. */
+  shopping_list: string[];
+  /** Extracted instructions from the content JSONB field. */
+  instructions: string[];
 };
 
 /**
@@ -137,6 +170,7 @@ export type RegeneratedRecipeDto = Pick<Recipe, "id" | "title" | "is_visible" | 
   initial_user_query: string;
   regenerated_from_recipe_id: string;
   ai_generation: AiGenerationDto;
+  user_api_key_id?: string | null;
 };
 
 /**
